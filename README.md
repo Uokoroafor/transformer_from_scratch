@@ -36,6 +36,6 @@ I have not yet included a training loop. This is purely for my edification. I wi
 
 
 ## License
-MIT
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
