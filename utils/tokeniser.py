@@ -1,11 +1,12 @@
 """Utility file for tokenising text data."""
 import spacy
+from typing import Optional
 
 
 class Tokeniser:
     """Tokeniser class for tokenising text data using spacy."""
 
-    def __init__(self, spacy_model_name: str = 'en_core_web_sm'):
+    def __init__(self, spacy_model_name: Optional[str] = 'en_core_web_sm'):
         """Initialise the tokeniser with a spacy model."""
         self.nlp = spacy.load(spacy_model_name)
 

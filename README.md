@@ -6,7 +6,7 @@ I did this to help me better understand work I had already done on the Tutorial 
 It enacts the components of the transformer architecture in the pre-Norm style, which is the style used in the original paper.
 
 The key components are:
-- *Positional Encoding*: This is a sine and cosine function that is added to the input embeddings to give the model a sense of position in the sequence.
+- *Positional Encoding*: This is a sine or cosine function that is added to the input embeddings to give the model a sense of position in the sequence.
 <br><br>
 - *Scaled Dot Product Attention*: This is the attention mechanism used in the Transformer. It is a dot product between the query and key vectors, scaled by the square root of the dimension of the key vectors. The output is a weighted sum of the value vectors.
 <br><br>
