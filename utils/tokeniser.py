@@ -9,14 +9,14 @@ class BPETokeniser:
     """Byte Pair Encoding Class for tokenising text data and creating a vocabulary."""
 
     def __init__(
-        self,
-        data: str,
-        vocab_size: Optional[int] = 1_000,
-        sos: Optional[str] = "<sos>",
-        eos: Optional[str] = "<eos>",
-        pad: Optional[str] = "<pad>",
-        unk: Optional[str] = "<unk>",
-        only_lower_case: Optional[bool] = False,
+            self,
+            data: str,
+            vocab_size: Optional[int] = 1_000,
+            sos: Optional[str] = "<sos>",
+            eos: Optional[str] = "<eos>",
+            pad: Optional[str] = "<pad>",
+            unk: Optional[str] = "<unk>",
+            only_lower_case: Optional[bool] = True,
     ):
         """Byte Pair Encoding Class
         Args:
@@ -25,23 +25,25 @@ class BPETokeniser:
             sos(str): start of sentence symbol
             eos(str): end of sentence symbol
             pad(str): padding symbol
-            unk(str): unknown symbol
-            only_lower_case(bool): whether to convert all characters to lower case
+            unk(str): unk symbol
+            only_lower_case(bool): whether to convert all characters to lower case or not (default: True)
         """
         self.vocab_size = vocab_size
         self.sos = sos
         self.eos = eos
         self.pad = pad
-        self.unknown = unk
-        self.special_tokens = {self.sos, self.eos, self.pad, self.unknown}
+        self.unk = unk
+        self.special_tokens = {self.sos, self.eos, self.pad, self.unk}
         self.lookup_table = None
         self.reverse_lookup_table = None
+        self.only_lower_case = only_lower_case
 
-        if only_lower_case:
+        if self.only_lower_case:
             data = data.lower()
 
-        self.data = self._get_words(data)
         self.tokens = set(data)
+        self.data = self._get_words(data)
+
         self.vocab = self.create_initial_vocab()
 
         assert vocab_size > len(
@@ -52,7 +54,7 @@ class BPETokeniser:
             # raise a warning
             print('Warning: vocab_size is less than the number of unique characters in the data setting vocab_size to '
                   'the number of unique characters in the data')
-            self.vocab_size = len(set(data)) + 4 # add 4 for the special tokens
+            self.vocab_size = len(set(data)) + 4  # add 4 for the special tokens
 
     @staticmethod
     def _get_words(data: str) -> List[List[str]]:
@@ -110,8 +112,8 @@ class BPETokeniser:
             i = 0
             while i < len(word) - 1:
                 if (
-                    word[i] == most_frequent_pair[0]
-                    and word[i + 1] == most_frequent_pair[1]
+                        word[i] == most_frequent_pair[0]
+                        and word[i + 1] == most_frequent_pair[1]
                 ):
                     word[i] = "".join(most_frequent_pair)
                     del word[i + 1]
@@ -119,7 +121,7 @@ class BPETokeniser:
                     i += 1
 
     def train(
-        self, num_iters: Optional[int] = 1000, verbose: Optional[bool] = False
+            self, num_iters: Optional[int] = 50, verbose: Optional[bool] = False
     ) -> None:
         """Train the BPE model
         Args:
@@ -163,7 +165,7 @@ class BPETokeniser:
         lookup_table[self.pad] = 0
         lookup_table[self.sos] = 1
         lookup_table[self.eos] = 2
-        lookup_table[self.unknown] = 3
+        lookup_table[self.unk] = 3
 
         for i, token in enumerate(self.vocab):
             lookup_table[token] = i + len(lookup_table)
@@ -175,7 +177,6 @@ class BPETokeniser:
     def create_reverse_lookup_table(self) -> None:
         """Reverses the lookup table so that we can decode the data"""
         self.reverse_lookup_table = {v: k for k, v in self.lookup_table.items()}
-
 
     def encode(self, data: str) -> List[int]:
         """Encode the data
@@ -194,7 +195,7 @@ class BPETokeniser:
                     if token in self.vocab:
                         enc_data.append(
                             self.lookup_table.get(
-                                token, self.lookup_table[self.unknown]
+                                token, self.lookup_table[self.unk]
                             )
                         )
                         i = j
@@ -202,13 +203,13 @@ class BPETokeniser:
                         break
                 if not found_token:
                     enc_data.append(
-                        self.lookup_table.get(word[i], self.lookup_table[self.unknown])
+                        self.lookup_table.get(word[i], self.lookup_table[self.unk])
                     )
                     i += 1
         return enc_data
 
     def decode(
-        self, enc_data: List[int], ignore_special_tokens: Optional[bool] = False
+            self, enc_data: List[int], ignore_special_tokens: Optional[bool] = False
     ) -> List[str]:
         """Decode the encoded data
         Args:
@@ -229,13 +230,13 @@ class BPETokeniser:
                     dec_data.append(word)
 
             except KeyError:
-                # If the token is not in the vocab, append the unknown token and print a warning
-                dec_data.append(self.unknown)
+                # If the token is not in the vocab, append the unk token and print a warning
+                dec_data.append(self.unk)
                 print("Warning: {} not in vocab".format(token))
         return dec_data
 
     def decode_words(
-        self, enc_data: List[int], ignore_special_tokens: Optional[bool] = True
+            self, enc_data: List[int], ignore_special_tokens: Optional[bool] = True
     ) -> str:
         """Decode the encoded data
         Args:
@@ -287,8 +288,8 @@ if __name__ == "__main__":
     print("Reverse Look Up Table: ", bpe.reverse_lookup_table)
 
     # Encode the data
-    encoded_data = bpe.encode("colour coordination is the best. Some might use 'color' instead of 'colour' but I am "
-                              "not one of them.")
+    encoded_data = bpe.encode("colour coordination is the best. some might use 'color' instead but i am "
+                              "not one of them.") # f in the data so it should be encoded as unk
 
     # Decode the data
     decoded_data = bpe.decode(encoded_data)
