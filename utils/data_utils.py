@@ -1,9 +1,8 @@
 # File for prepping data for transformer model for machine translation.
-from typing import Optional, List, Tuple, Iterator
-
+import warnings
+from typing import List, Tuple, Iterator
 import torch
 from torch.utils.data import IterableDataset, DataLoader
-
 from utils.tokeniser import BPETokeniser
 
 
@@ -83,6 +82,49 @@ class DataHandler:
         return DataLoader(self.dataset, batch_size=self.batch_size,
                           collate_fn=self._collate_fn)
 
+    def prep_string(self, string: str, pad_seq: bool = True) -> torch.Tensor:
+        """Prep a string for translation.
+
+        Args:
+            string: The string to prep.
+            pad_seq: Whether to pad the sequence. If not, the sequence will just be truncated.
+
+        Returns:
+            The prepped string.
+        """
+        string = self.src_tokeniser.encode(string)
+        if len(string) > self.src_max_seq_len:
+            warnings.warn(f"String longer than max sequence length ({self.src_max_seq_len}). Truncating.")
+        string = string[:self.src_max_seq_len - 1] + [self.src_eos_idx]
+        if pad_seq:
+            string += [self.src_pad_idx] * (self.src_max_seq_len - len(string))
+        return torch.tensor(string)
+
+    def output_string(self, tensor: torch.Tensor, output_method: str = "trg",
+                      ignore_special_tokens: bool = True) -> str:
+        """Convert a tensor to a string.
+
+        Args:
+            tensor: The tensor to convert.
+            output_method: The output method to use. Either "trg" or "src".
+            ignore_special_tokens: Whether to ignore special tokens.
+
+        Returns:
+            The output string.
+        """
+        if output_method == "trg":
+            tokeniser = self.trg_tokeniser
+
+        elif output_method == "src":
+            tokeniser = self.src_tokeniser
+
+        else:
+            raise ValueError(f"Invalid output method: {output_method}")
+
+        out_string = ''.join(tokeniser.decode(tensor.tolist(), ignore_special_tokens=ignore_special_tokens))
+
+        return out_string
+
 
 class TranslationIterableDataset(IterableDataset):
 
@@ -109,7 +151,8 @@ class TranslationIterableDataset(IterableDataset):
             The source and target sentences.
         """
         try:
-            with open(self.src_file_path, 'r', encoding='utf-8') as src_file, open(self.trg_file_path, 'r', encoding='utf-8') as trg_file:
+            with open(self.src_file_path, 'r', encoding='utf-8') as src_file, open(self.trg_file_path, 'r',
+                                                                                   encoding='utf-8') as trg_file:
                 for src_line, trg_line in zip(src_file, trg_file):
                     yield self.process_lines(src_line, trg_line)
         except FileNotFoundError:
