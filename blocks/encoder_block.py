@@ -33,7 +33,7 @@ class EncoderBlock(nn.Module):
             torch.Tensor: Output tensor of shape (batch_size, seq_len, d_model)
         """
         # Attention
-        _x = self.attention(x, x, x, mask)
+        _x,_ = self.attention(x, x, x, mask)
 
         # Add and Norm
         _x = self.dropout(_x)

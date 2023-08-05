@@ -3,6 +3,7 @@ import pickle as pkl
 import re
 from collections import Counter
 from typing import List, Tuple, Optional, Dict, Set
+import warnings
 
 
 class BPETokeniser:
@@ -11,12 +12,13 @@ class BPETokeniser:
     def __init__(
             self,
             data: str,
-            vocab_size: Optional[int] = 1_000,
-            sos: Optional[str] = "<sos>",
-            eos: Optional[str] = "<eos>",
-            pad: Optional[str] = "<pad>",
-            unk: Optional[str] = "<unk>",
-            only_lower_case: Optional[bool] = True,
+            vocab_size: int = 1_000,
+            sos: str = "<sos>",
+            eos: str = "<eos>",
+            pad: str = "<pad>",
+            unk: str = "<unk>",
+            only_lower_case: bool = True,
+            training_cap: Optional[int] = 1_000_000,
     ):
         """Byte Pair Encoding Class
         Args:
@@ -27,6 +29,8 @@ class BPETokeniser:
             pad(str): padding symbol
             unk(str): unk symbol
             only_lower_case(bool): whether to convert all characters to lower case or not (default: True)
+            training_cap(int): maximum number of characters to use for training (default: 1_000_000 - roughly 1 minute for 50 training epochs). If the data is longer than this, only a subset of the data will be used for training. A training_cap of None will use all the data.
+
         """
         self.vocab_size = vocab_size
         self.sos = sos
@@ -42,18 +46,24 @@ class BPETokeniser:
             data = data.lower()
 
         self.tokens = set(data)
+
+        # The _get_words function can be very slow. If data is of length >1_000_000, only use a subset of the data
+        if training_cap is not None:
+            if len(data) > training_cap:
+                data = data[:training_cap]
         self.data = self._get_words(data)
 
         self.vocab = self.create_initial_vocab()
 
-        assert vocab_size > len(
-            self.vocab
-        ), "Vocab size must be greater than or equal to the size of the initial vocab"
+        # assert vocab_size > len(
+        #     self.vocab
+        # ), "Vocab size must be greater than or equal to the size of the initial vocab"
 
         if self.vocab_size < len(set(data)):
             # raise a warning
-            print('Warning: vocab_size is less than the number of unique characters in the data setting vocab_size to '
-                  'the number of unique characters in the data')
+            warnings.warn(
+                'vocab_size is less than the number of unique characters in the data setting vocab_size to '
+                'the number of unique characters in the data', UserWarning)
             self.vocab_size = len(set(data)) + 4  # add 4 for the special tokens
 
     @staticmethod
@@ -232,7 +242,7 @@ class BPETokeniser:
             except KeyError:
                 # If the token is not in the vocab, append the unk token and print a warning
                 dec_data.append(self.unk)
-                print("Warning: {} not in vocab".format(token))
+                warnings.warn("{} not in vocab".format(token), UserWarning)
         return dec_data
 
     def decode_words(
@@ -256,18 +266,11 @@ class BPETokeniser:
         with open(path, "wb") as f:
             pkl.dump(self, f)
 
-    def report_size(self) -> None:
-        """Report the size of the lookup table"""
-        print("Number of tokens in vocab: {}".format(len(self.lookup_table)))
-
     def __repr__(self) -> str:
-        return "BPE(vocab_size={})".format(self.vocab_size)
-
-    def __str__(self) -> str:
-        return "BPE(vocab_size={})".format(self.vocab_size)
+        return "BPE(vocab_size={})".format(len(self.lookup_table))
 
     def __len__(self) -> int:
-        return self.vocab_size
+        return len(self.lookup_table)
 
 
 if __name__ == "__main__":
@@ -289,7 +292,7 @@ if __name__ == "__main__":
 
     # Encode the data
     encoded_data = bpe.encode("colour coordination is the best. some might use 'color' instead but i am "
-                              "not one of them.") # f in the data so it should be encoded as unk
+                              "not one of them.")  # if in the data so it should be encoded as unk
 
     # Decode the data
     decoded_data = bpe.decode(encoded_data)

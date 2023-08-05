@@ -11,7 +11,7 @@ class DataHandler:
     """Data loader class for loading data for machine translation."""
 
     def __init__(self, src_file_path: str, trg_file_path: str, src_tokeniser: BPETokeniser, trg_tokeniser: BPETokeniser,
-                 src_max_seq_len: Optional[int] = None, trg_max_seq_len: Optional[int] = None, batch_size: int = 32):
+                 src_max_seq_len: int, trg_max_seq_len: int, batch_size: int = 32):
         """Initialise the data loader with the data and tokenisers.
 
         Args:
@@ -55,7 +55,7 @@ class DataHandler:
             batch: The batch of data.
 
         Returns:
-            The source and target tensors.
+            The source and target tensors. Note that the target tensor has will be one token longer than the source
         """
 
         src_batch = []
@@ -68,8 +68,8 @@ class DataHandler:
             src_batch.append(torch.tensor(src_line))
 
             # Add sos to start of sentence for target, pad and convert to tensor
-            trg_line = [self.trg_sos_idx] + trg_line[:self.trg_max_seq_len - 2] + [self.trg_eos_idx]
-            trg_line += [self.trg_pad_idx] * (self.trg_max_seq_len - len(trg_line))
+            trg_line = [self.trg_sos_idx] + trg_line[:self.trg_max_seq_len - 1] + [self.trg_eos_idx]
+            trg_line += [self.trg_pad_idx] * (self.trg_max_seq_len + 1 - len(trg_line))
             trg_batch.append(torch.tensor(trg_line))
 
         return torch.stack(src_batch), torch.stack(trg_batch)
