@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from attention import Attention
+from layers.attention import Attention
 from typing import Optional, Tuple
 
 

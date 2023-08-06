@@ -55,8 +55,11 @@ class Transformer(nn.Module):
         Returns:
             torch.Tensor: Source mask tensor of shape (batch_size, seq_len, seq_len)
         """
-        # What to ignore the padding tokens
+        # Want to ignore the padding tokens and want shape to be (batch_size, seq_len, seq_len)
         src_mask = (src != self.src_pad).unsqueeze(-2)  # (batch_size, 1, seq_len)
+
+        # repeat the mask so that the shape is (batch_size, seq_len, seq_len)
+        src_mask = src_mask & src_mask.transpose(-2, -1)
 
         return src_mask
 

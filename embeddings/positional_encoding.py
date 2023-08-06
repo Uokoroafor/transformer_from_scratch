@@ -28,9 +28,9 @@ class PositionalEncoding(nn.Module):
         pe[:, 1::2] = torch.cos(position * div_term)
         # 1::2 to get only odd indices
 
-        pe = pe.unsqueeze(0).transpose(0, 1)
+        pe = pe.unsqueeze(0)  # Want it to be of shape (1, max_len, d_model)
 
-        self.register_buffer('pe', pe)
+        self.register_buffer('pe', pe) # Registering as a buffer so that it is not considered a model parameter
 
     def forward(self, x):
         # x is of shape (batch_size, seq_len, d_model)

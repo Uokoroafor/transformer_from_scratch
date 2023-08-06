@@ -21,6 +21,12 @@ class TransformerEmbeddings(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
+        """Forward pass of the Transformer Embeddings layer
+        Args:
+            x: Input tensor of shape (batch_size, seq_len)
+        Returns:
+            Tensor of shape (batch_size, seq_len, d_model)
+        """
         # Get the embedding of the input
         x = self.token_embeddings(x)
 
