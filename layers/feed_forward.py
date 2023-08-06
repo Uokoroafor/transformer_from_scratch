@@ -4,8 +4,13 @@ import torch.nn as nn
 
 
 class FeedForward(nn.Module):
-
-    def __init__(self, d_model: int, d_ff: int, d_out: Optional[int], dropout: Optional[float] = 0.1):
+    def __init__(
+        self,
+        d_model: int,
+        d_ff: int,
+        d_out: Optional[int],
+        dropout: Optional[float] = 0.1,
+    ):
         """Constructor class for the Positionwise Feed Forward layer
 
         Args:

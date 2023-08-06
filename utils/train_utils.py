@@ -10,11 +10,18 @@ from utils.logging_utils import Logger, plot_losses
 
 
 class Trainer:
-
-    def __init__(self, model: nn.Module, train_data: DataLoader, val_data: DataLoader,
-                 loss_fn: nn.Module, optimiser: optim.Optimizer, device: torch.device, path: Optional[str] = None,
-                 verbose: bool = True):
-        """ Initialise the trainer object
+    def __init__(
+        self,
+        model: nn.Module,
+        train_data: DataLoader,
+        val_data: DataLoader,
+        loss_fn: nn.Module,
+        optimiser: optim.Optimizer,
+        device: torch.device,
+        path: Optional[str] = None,
+        verbose: bool = True,
+    ):
+        """Initialise the trainer object
 
         Args:
             model: The model to train
@@ -34,10 +41,16 @@ class Trainer:
         self.device = device
         self.path = create_training_folder(path)
 
-        self.logger = Logger(self.path + "/training_logs/training_log.txt", name="training_log", verbose=verbose)
+        self.logger = Logger(
+            self.path + "/training_logs/training_log.txt",
+            name="training_log",
+            verbose=verbose,
+        )
 
-    def model_loop(self, method: str = 'train', test_data: Optional[DataLoader] = None) -> float:
-        """ Train the model for one epoch
+    def model_loop(
+        self, method: str = "train", test_data: Optional[DataLoader] = None
+    ) -> float:
+        """Train the model for one epoch
 
         Args:
             method: The method to use, either 'train', 'val' or 'test'
@@ -47,17 +60,19 @@ class Trainer:
             The average loss for the epoch or evaluation
         """
 
-        if method == 'train':
+        if method == "train":
             self.model.train()
             data_loader = self.train_data
-        elif method == 'val':
+        elif method == "val":
             self.model.eval()
             data_loader = self.val_data
-        elif method == 'test':
+        elif method == "test":
             self.model.eval()
             data_loader = test_data
         else:
-            raise ValueError(f'Invalid method: {method}. Only "train", "val" and "test" are valid methods.')
+            raise ValueError(
+                f'Invalid method: {method}. Only "train", "val" and "test" are valid methods.'
+            )
 
         epoch_loss = 0
         batch_idx = 0
@@ -70,9 +85,11 @@ class Trainer:
             output = self.model(src_input, trg_input[:, :-1])
 
             # Calculate the loss
-            loss = self.loss_fn(output.reshape(-1, output.shape[-1]), trg_input[:, 1:].reshape(-1))
+            loss = self.loss_fn(
+                output.reshape(-1, output.shape[-1]), trg_input[:, 1:].reshape(-1)
+            )
 
-            if method == 'train':
+            if method == "train":
                 # Backward pass
                 self.optimiser.zero_grad()
                 loss.backward()
@@ -82,10 +99,18 @@ class Trainer:
 
         return epoch_loss / (batch_idx + 1)
 
-    def train(self, epochs: int, save_model: bool = True, save_model_path: Optional[str] = None,
-              plotting: bool = True, verbose: bool = True, eval_every: int = 1, early_stopping: bool = True,
-              early_stopping_patience: int = 10) -> Tuple[nn.Module, List[float], List[float]]:
-        """ Train the model
+    def train(
+        self,
+        epochs: int,
+        save_model: bool = True,
+        save_model_path: Optional[str] = None,
+        plotting: bool = True,
+        verbose: bool = True,
+        eval_every: int = 1,
+        early_stopping: bool = True,
+        early_stopping_patience: int = 10,
+    ) -> Tuple[nn.Module, List[float], List[float]]:
+        """Train the model
 
         Args:
             epochs: The number of epochs to train for
@@ -100,51 +125,64 @@ class Trainer:
         Returns:
             The training and validation loss
         """
-        self.logger.log_info(f'Training for {epochs} epochs')
+        self.logger.log_info(f"Training for {epochs} epochs")
         if save_model and save_model_path is None:
-            save_model_path = f"{self.path}/saved_models/{type(self.model).__name__}_best_model.pt"
+            save_model_path = (
+                f"{self.path}/saved_models/{type(self.model).__name__}_best_model.pt"
+            )
 
         train_loss = []
         val_loss = []
 
-        best_val_loss = float('inf')
+        best_val_loss = float("inf")
         epochs_without_improvement = 0
 
         for epoch in range(epochs):
-            train_epoch_loss = self.model_loop(method='train')
+            train_epoch_loss = self.model_loop(method="train")
 
             if epoch % eval_every == 0:
-                val_epoch_loss = self.model_loop(method='val')
+                val_epoch_loss = self.model_loop(method="val")
 
                 train_loss.append(train_epoch_loss)
                 val_loss.append(val_epoch_loss)
 
                 if verbose:
                     self.logger.log_info(
-                        f'Epoch {epoch + 1}/{epochs}: Train loss: {train_epoch_loss:.4f}, Val loss: {val_epoch_loss:.4f}')
+                        f"Epoch {epoch + 1}/{epochs}: Train loss: {train_epoch_loss:.4f}, Val loss: {val_epoch_loss:.4f}"
+                    )
 
                 if val_epoch_loss < best_val_loss:
                     best_val_loss = val_epoch_loss
                     epochs_without_improvement = 0
 
                     if save_model:
-                        self.logger.log_info(f'Saving model to {save_model_path}')
+                        self.logger.log_info(f"Saving model to {save_model_path}")
                         torch.save(self.model.state_dict(), save_model_path)
                 else:
                     epochs_without_improvement += 1
 
-                    if early_stopping and epochs_without_improvement == early_stopping_patience:
-                        self.logger.log_info(f'Early stopping after {epoch + 1} epochs')
+                    if (
+                        early_stopping
+                        and epochs_without_improvement == early_stopping_patience
+                    ):
+                        self.logger.log_info(f"Early stopping after {epoch + 1} epochs")
                         break
 
         if plotting:
-            saved_path = f"{self.path}/training_logs/{type(self.model).__name__}_losses.png"
-            plot_losses(train_loss, val_loss, model_name=self.model.__class__.__name__, saved_path=saved_path)
+            saved_path = (
+                f"{self.path}/training_logs/{type(self.model).__name__}_losses.png"
+            )
+            plot_losses(
+                train_loss,
+                val_loss,
+                model_name=self.model.__class__.__name__,
+                saved_path=saved_path,
+            )
 
         return self.model, train_loss, val_loss
 
     def evaluate(self, data: DataLoader) -> float:
-        """ Evaluate the model
+        """Evaluate the model
 
         Args:
             data: The data to evaluate the model on
@@ -152,4 +190,4 @@ class Trainer:
         Returns:
             The average loss
         """
-        return self.model_loop(method='test', test_data=data)
+        return self.model_loop(method="test", test_data=data)

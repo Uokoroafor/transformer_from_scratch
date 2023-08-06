@@ -9,8 +9,16 @@ from utils.tokeniser import BPETokeniser
 class DataHandler:
     """Data loader class for loading data for machine translation."""
 
-    def __init__(self, src_file_path: str, trg_file_path: str, src_tokeniser: BPETokeniser, trg_tokeniser: BPETokeniser,
-                 src_max_seq_len: int, trg_max_seq_len: int, batch_size: int = 32):
+    def __init__(
+        self,
+        src_file_path: str,
+        trg_file_path: str,
+        src_tokeniser: BPETokeniser,
+        trg_tokeniser: BPETokeniser,
+        src_max_seq_len: int,
+        trg_max_seq_len: int,
+        batch_size: int = 32,
+    ):
         """Initialise the data loader with the data and tokenisers.
 
         Args:
@@ -43,11 +51,15 @@ class DataHandler:
         self.src_max_seq_len = src_max_seq_len
         self.trg_max_seq_len = trg_max_seq_len
 
-        self.dataset = TranslationIterableDataset(self.src, self.trg, self.src_tokeniser, self.trg_tokeniser)
+        self.dataset = TranslationIterableDataset(
+            self.src, self.trg, self.src_tokeniser, self.trg_tokeniser
+        )
 
         self.dataloader = self.get_data_loader()
 
-    def _collate_fn(self, batch: List[Tuple[List[int], List[int]]]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _collate_fn(
+        self, batch: List[Tuple[List[int], List[int]]]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Collate the batch.
 
         Args:
@@ -62,12 +74,16 @@ class DataHandler:
 
         for src_line, trg_line in batch:
             # Add eos to end of sentence for source, pad and convert to tensor
-            src_line = src_line[:self.src_max_seq_len - 1] + [self.src_eos_idx]
+            src_line = src_line[: self.src_max_seq_len - 1] + [self.src_eos_idx]
             src_line += [self.src_pad_idx] * (self.src_max_seq_len - len(src_line))
             src_batch.append(torch.tensor(src_line))
 
             # Add sos to start of sentence for target, pad and convert to tensor
-            trg_line = [self.trg_sos_idx] + trg_line[:self.trg_max_seq_len - 1] + [self.trg_eos_idx]
+            trg_line = (
+                [self.trg_sos_idx]
+                + trg_line[: self.trg_max_seq_len - 1]
+                + [self.trg_eos_idx]
+            )
             trg_line += [self.trg_pad_idx] * (self.trg_max_seq_len + 1 - len(trg_line))
             trg_batch.append(torch.tensor(trg_line))
 
@@ -79,8 +95,9 @@ class DataHandler:
         Returns:
             The data loader.
         """
-        return DataLoader(self.dataset, batch_size=self.batch_size,
-                          collate_fn=self._collate_fn)
+        return DataLoader(
+            self.dataset, batch_size=self.batch_size, collate_fn=self._collate_fn
+        )
 
     def prep_string(self, string: str, pad_seq: bool = True) -> torch.Tensor:
         """Prep a string for translation.
@@ -94,14 +111,20 @@ class DataHandler:
         """
         string = self.src_tokeniser.encode(string)
         if len(string) > self.src_max_seq_len:
-            warnings.warn(f"String longer than max sequence length ({self.src_max_seq_len}). Truncating.")
-        string = string[:self.src_max_seq_len - 1] + [self.src_eos_idx]
+            warnings.warn(
+                f"String longer than max sequence length ({self.src_max_seq_len}). Truncating."
+            )
+        string = string[: self.src_max_seq_len - 1] + [self.src_eos_idx]
         if pad_seq:
             string += [self.src_pad_idx] * (self.src_max_seq_len - len(string))
         return torch.tensor(string)
 
-    def output_string(self, tensor: torch.Tensor, output_method: str = "trg",
-                      ignore_special_tokens: bool = True) -> str:
+    def output_string(
+        self,
+        tensor: torch.Tensor,
+        output_method: str = "trg",
+        ignore_special_tokens: bool = True,
+    ) -> str:
         """Convert a tensor to a string.
 
         Args:
@@ -121,15 +144,23 @@ class DataHandler:
         else:
             raise ValueError(f"Invalid output method: {output_method}")
 
-        out_string = ''.join(tokeniser.decode(tensor.tolist(), ignore_special_tokens=ignore_special_tokens))
+        out_string = "".join(
+            tokeniser.decode(
+                tensor.tolist(), ignore_special_tokens=ignore_special_tokens
+            )
+        )
 
         return out_string
 
 
 class TranslationIterableDataset(IterableDataset):
-
-    def __init__(self, src_file_path: str, trg_file_path: str, src_tokenizer: BPETokeniser,
-                 trg_tokenizer: BPETokeniser):
+    def __init__(
+        self,
+        src_file_path: str,
+        trg_file_path: str,
+        src_tokenizer: BPETokeniser,
+        trg_tokenizer: BPETokeniser,
+    ):
         """Initialise the dataset.
 
         Args:
@@ -153,9 +184,8 @@ class TranslationIterableDataset(IterableDataset):
         src_file = None
         trg_file = None
         try:
-
-            src_file = open(self.src_file_path, 'r', encoding='utf-8')
-            trg_file = open(self.trg_file_path, 'r', encoding='utf-8')
+            src_file = open(self.src_file_path, "r", encoding="utf-8")
+            trg_file = open(self.trg_file_path, "r", encoding="utf-8")
             src_line = src_file.readline()
             trg_line = trg_file.readline()
 
@@ -165,8 +195,10 @@ class TranslationIterableDataset(IterableDataset):
                 trg_line = trg_file.readline()
 
         except FileNotFoundError:
-            print(f"File not found at the specified path(s). Check the listed paths {self.src_file_path} "
-                  f"and {self.trg_file_path}")
+            print(
+                f"File not found at the specified path(s). Check the listed paths {self.src_file_path} "
+                f"and {self.trg_file_path}"
+            )
             yield None
         except StopIteration:
             print(f"Reached end of files.")
@@ -180,7 +212,9 @@ class TranslationIterableDataset(IterableDataset):
     def __next__(self):
         return self.__iter__()
 
-    def process_lines(self, src_line: str, trg_line: str) -> Tuple[List[int], List[int]]:
+    def process_lines(
+        self, src_line: str, trg_line: str
+    ) -> Tuple[List[int], List[int]]:
         """Process the source and target lines.
 
         Args:
@@ -202,18 +236,20 @@ class TranslationIterableDataset(IterableDataset):
         return src_line, trg_line
 
 
-if __name__ == '__main__':
-    src_file_path = '../data/euro_parl_fr_en/english_test.txt'
-    trg_file_path = '../data/euro_parl_fr_en/french_test.txt'
+if __name__ == "__main__":
+    src_file_path = "../data/euro_parl_fr_en/english_test.txt"
+    trg_file_path = "../data/euro_parl_fr_en/french_test.txt"
 
     # load data from text files
-    with open(src_file_path, 'r', encoding='utf-8') as src_file, open(trg_file_path, 'r', encoding='utf-8') as trg_file:
+    with open(src_file_path, "r", encoding="utf-8") as src_file, open(
+        trg_file_path, "r", encoding="utf-8"
+    ) as trg_file:
         src_lines = src_file.readlines()
         trg_lines = trg_file.readlines()
 
     # amalgamate the data keeping in the new line characters
-    src_lines = ''.join(src_lines)
-    trg_lines = ''.join(trg_lines)
+    src_lines = "".join(src_lines)
+    trg_lines = "".join(trg_lines)
 
     # create tokenizers
     src_tokenizer = BPETokeniser(src_lines, only_lower_case=False)
@@ -224,8 +260,15 @@ if __name__ == '__main__':
     trg_tokenizer.train(10)
 
     # create the datahandler
-    data_handler = DataHandler(src_file_path, trg_file_path, src_tokenizer, trg_tokenizer, batch_size=32,
-                               src_max_seq_len=100, trg_max_seq_len=100)
+    data_handler = DataHandler(
+        src_file_path,
+        trg_file_path,
+        src_tokenizer,
+        trg_tokenizer,
+        batch_size=32,
+        src_max_seq_len=100,
+        trg_max_seq_len=100,
+    )
 
     # get the data loader
     data_loader = data_handler.get_data_loader()
@@ -233,5 +276,10 @@ if __name__ == '__main__':
     data_iter = iter(data_loader)
     for _ in range(5):
         src, trg = next(data_iter)
-        print('English: ', ''.join(src_tokenizer.decode(src[0, :].tolist(), True)), '\nFrench: ',
-              ''.join(trg_tokenizer.decode(trg[0, :].tolist(), True)), '\n')
+        print(
+            "English: ",
+            "".join(src_tokenizer.decode(src[0, :].tolist(), True)),
+            "\nFrench: ",
+            "".join(trg_tokenizer.decode(trg[0, :].tolist(), True)),
+            "\n",
+        )

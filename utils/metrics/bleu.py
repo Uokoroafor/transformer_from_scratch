@@ -3,7 +3,11 @@ from nltk.translate.bleu_score import sentence_bleu
 from typing import List, Union, Optional
 
 
-def bleu_score(predictions: Union[List[str], str], targets: Union[List[str], str], n_gram: Optional[int] = 4) -> float:
+def bleu_score(
+    predictions: Union[List[str], str],
+    targets: Union[List[str], str],
+    n_gram: Optional[int] = 4,
+) -> float:
     """Calculate the BLEU score between two lists of strings.
     Args:
         predictions (Union[List[str],str]): The predicted sentences.

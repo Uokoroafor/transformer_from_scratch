@@ -5,9 +5,14 @@ from typing import Optional
 
 
 class TransformerEmbeddings(nn.Module):
-
-    def __init__(self, vocab_size: int, d_model: int, max_seq_len: int, dropout: Optional[float] = 0.0):
-        """ Class for Transformer Embeddings. Combines the token embeddings and the positional encoding and applies
+    def __init__(
+        self,
+        vocab_size: int,
+        d_model: int,
+        max_seq_len: int,
+        dropout: Optional[float] = 0.0,
+    ):
+        """Class for Transformer Embeddings. Combines the token embeddings and the positional encoding and applies
         dropout if needed
         Args:
             vocab_size: Vocabulary size

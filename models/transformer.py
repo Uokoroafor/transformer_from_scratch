@@ -6,11 +6,22 @@ from models.encoder import Encoder
 
 
 class Transformer(nn.Module):
-
-    def __init__(self, src_pad: int, trg_pad: int, trg_sos: int, vocab_size_enc: int, vocab_size_dec: int, d_model: int,
-                 d_ff: int, max_seq_len: int, num_layers: Optional[int] = 6, num_heads: Optional[int] = 8,
-                 dropout_prob: Optional[float] = 0.1, device: Optional[str] = 'cpu'):
-        """ Constructor class for the transformer. It consists of both the encoder and the decoder.
+    def __init__(
+        self,
+        src_pad: int,
+        trg_pad: int,
+        trg_sos: int,
+        vocab_size_enc: int,
+        vocab_size_dec: int,
+        d_model: int,
+        d_ff: int,
+        max_seq_len: int,
+        num_layers: Optional[int] = 6,
+        num_heads: Optional[int] = 8,
+        dropout_prob: Optional[float] = 0.1,
+        device: Optional[str] = "cpu",
+    ):
+        """Constructor class for the transformer. It consists of both the encoder and the decoder.
         Args:
 
             src_pad (int): Source padding index
@@ -30,8 +41,24 @@ class Transformer(nn.Module):
         self.src_pad = src_pad
         self.trg_pad = trg_pad
         self.trg_sos = trg_sos
-        self.encoder = Encoder(vocab_size_enc, d_model, max_seq_len, num_layers, num_heads, d_ff, dropout_prob)
-        self.decoder = Decoder(vocab_size_dec, d_model, max_seq_len, num_layers, num_heads, d_ff, dropout_prob)
+        self.encoder = Encoder(
+            vocab_size_enc,
+            d_model,
+            max_seq_len,
+            num_layers,
+            num_heads,
+            d_ff,
+            dropout_prob,
+        )
+        self.decoder = Decoder(
+            vocab_size_dec,
+            d_model,
+            max_seq_len,
+            num_layers,
+            num_heads,
+            d_ff,
+            dropout_prob,
+        )
         self.device = device
 
     def forward(self, src: torch.Tensor, trg: torch.Tensor) -> torch.Tensor:
@@ -74,7 +101,9 @@ class Transformer(nn.Module):
         trg_pad_mask = (trg != self.trg_pad).unsqueeze(-2)  # (batch_size, 1, seq_len)
         trg_len = trg.shape[1]
         # What to ignore the future tokens (i.e. tokens that are not yet predicted)
-        trg_sub_mask = torch.tril(torch.ones((trg_len, trg_len), device=self.device)).bool()
+        trg_sub_mask = torch.tril(
+            torch.ones((trg_len, trg_len), device=self.device)
+        ).bool()
         # Final mask ignores both padding and future tokens
         trg_mask = trg_pad_mask & trg_sub_mask
         return trg_mask

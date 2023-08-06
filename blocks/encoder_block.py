@@ -7,8 +7,13 @@ from layers.feed_forward import FeedForward
 
 
 class EncoderBlock(nn.Module):
-
-    def __init__(self, d_model: int, d_ff: int, num_heads: int, dropout_prob: Optional[float] = 0.1):
+    def __init__(
+        self,
+        d_model: int,
+        d_ff: int,
+        num_heads: int,
+        dropout_prob: Optional[float] = 0.1,
+    ):
         """Constructor class for the Encoder Block of the Transformer
         Args:
             d_model (int): Dimension of the model
@@ -16,12 +21,14 @@ class EncoderBlock(nn.Module):
             num_heads (int): Number of heads
             dropout_prob (float, optional): Dropout probability. Defaults to 0.1.
         """
-        super(EncoderBlock,self).__init__()
+        super(EncoderBlock, self).__init__()
         self.attention = MultiHeadAttention(d_model, num_heads)
         self.layer_norm_1 = LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout_prob)
 
-        self.feed_forward = FeedForward(d_model=d_model, d_ff=d_ff, d_out=d_model, dropout=dropout_prob) # Specifying arguments here to avoid ambiguity
+        self.feed_forward = FeedForward(
+            d_model=d_model, d_ff=d_ff, d_out=d_model, dropout=dropout_prob
+        )  # Specifying arguments here to avoid ambiguity
         self.layer_norm_2 = LayerNorm(d_model)
 
     def forward(self, x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
@@ -33,7 +40,7 @@ class EncoderBlock(nn.Module):
             torch.Tensor: Output tensor of shape (batch_size, seq_len, d_model)
         """
         # Attention
-        _x,_ = self.attention(x, x, x, mask)
+        _x, _ = self.attention(x, x, x, mask)
 
         # Add and Norm
         _x = self.dropout(_x)
@@ -47,5 +54,3 @@ class EncoderBlock(nn.Module):
         x = self.layer_norm_2(x + _x)
 
         return x
-
-
