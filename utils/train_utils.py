@@ -12,7 +12,8 @@ from utils.logging_utils import Logger, plot_losses
 class Trainer:
 
     def __init__(self, model: nn.Module, train_data: DataLoader, val_data: DataLoader,
-                 loss_fn: nn.Module, optimiser: optim.Optimizer, device: torch.device, path: Optional[str]=None):
+                 loss_fn: nn.Module, optimiser: optim.Optimizer, device: torch.device, path: Optional[str] = None,
+                 verbose: bool = True):
         """ Initialise the trainer object
 
         Args:
@@ -23,6 +24,7 @@ class Trainer:
             optimiser: The optimiser to use
             device: The device to use
             path: The path to save the model to
+            verbose: Whether to print the training logs to stdout
         """
         self.model = model
         self.train_data = train_data
@@ -32,7 +34,7 @@ class Trainer:
         self.device = device
         self.path = create_training_folder(path)
 
-        self.logger = Logger(self.path+ "/training_logs/training_log.txt")
+        self.logger = Logger(self.path + "/training_logs/training_log.txt", name="training_log", verbose=verbose)
 
     def model_loop(self, method: str = 'train', test_data: Optional[DataLoader] = None) -> float:
         """ Train the model for one epoch

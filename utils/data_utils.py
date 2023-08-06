@@ -150,17 +150,35 @@ class TranslationIterableDataset(IterableDataset):
         Yields:
             The source and target sentences.
         """
+        src_file = None
+        trg_file = None
         try:
-            with open(self.src_file_path, 'r', encoding='utf-8') as src_file, open(self.trg_file_path, 'r',
-                                                                                   encoding='utf-8') as trg_file:
-                for src_line, trg_line in zip(src_file, trg_file):
-                    yield self.process_lines(src_line, trg_line)
+
+            src_file = open(self.src_file_path, 'r', encoding='utf-8')
+            trg_file = open(self.trg_file_path, 'r', encoding='utf-8')
+            src_line = src_file.readline()
+            trg_line = trg_file.readline()
+
+            while src_line and trg_line:
+                yield self.process_lines(src_line, trg_line)
+                src_line = src_file.readline()
+                trg_line = trg_file.readline()
+
         except FileNotFoundError:
-            print(f"File not found at the specified path.")
+            print(f"File not found at the specified path(s). Check the listed paths {self.src_file_path} "
+                  f"and {self.trg_file_path}")
+            yield None
+        except StopIteration:
+            print(f"Reached end of files.")
+            src_file.close()
+            trg_file.close()
             yield None
         except Exception as e:
             print(f"An error occurred: {e}")
             yield None
+
+    def __next__(self):
+        return self.__iter__()
 
     def process_lines(self, src_line: str, trg_line: str) -> Tuple[List[int], List[int]]:
         """Process the source and target lines.

@@ -194,7 +194,7 @@ trainer = Trainer(model=model, train_data=train_loader, val_data=val_loader, los
 
 # Train the model
 model, _, _ = trainer.train(epochs=training_params['num_epochs'], save_model=True, plotting=True,
-              verbose=True, eval_every=1, early_stopping=False, early_stopping_patience=10)
+                            verbose=True, eval_every=1, early_stopping=False, early_stopping_patience=10)
 
 # Test a phrase
 phrase = 'The way around an obstacle is through it.'
@@ -210,4 +210,3 @@ preds = torch.argmax(preds, dim=-1).squeeze(0)
 # Convert the tokens to a string
 pred_str = train_data.output_string(preds)
 print(pred_str)
-
