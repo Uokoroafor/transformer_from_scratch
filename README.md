@@ -27,7 +27,16 @@ cd transformer_from_scratch
 pip install -r requirements.txt
 ```
 ## Usage
-I have not yet included a training loop. This is purely for my edification. I will add a training loop in the future.
+I have now included a number of utility files in the utils folder to help with handling the data and training the model. 
+The main file to train on the europarl dataset is train_fr_en.py in the examples folder.
+
+This file can be run with the following command:
+```
+python examples/train_fr_en.py
+```
+Note that it is training a model to translate from English to French but it is fairly easy to change this to any other language pair.
+## Results
+TBC - the run will take a while to complete so this will be updated when there is capacity to run it.
 
 ## References
 - [Attention Is All You Need](https://arxiv.org/abs/1706.03762)
