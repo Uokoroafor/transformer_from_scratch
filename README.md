@@ -26,6 +26,38 @@ git clone https://github.com/Uokoroafor/transformer_from_scratch
 cd transformer_from_scratch
 pip install -r requirements.txt
 ```
+
+## Project Structure
+```bash
+├── README.md
+├── data
+│   ├── __init__.py
+│   └── europarl_fr_en
+├── examples
+│   ├── __init__.py
+│   └── train_fr_en.py
+├── models
+│   ├── __init__.py
+│   ├── decoder.py
+│   ├── encoder.py
+│   ├── multi_head_attention.py
+│   ├── positional_encoding.py
+│   ├── residual_block.py
+│   └── transformer.py
+├── embeddings
+│   ├── __init__.py
+│   ├── multi_head_attention.py
+│   ├── positional_encoding.py
+├── requirements.txt
+└── utils
+    ├── __init__.py
+    ├── file_utils.py
+    ├── train_utils.py
+    ├── data_utils.py
+    ├── logging_utils.py
+    └── tokeniser.py
+```
+
 ## Usage
 I have now included a number of utility files in the utils folder to help with handling the data and training the model. 
 The main file to train on the europarl dataset is train_fr_en.py in the examples folder.
