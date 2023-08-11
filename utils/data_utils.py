@@ -174,6 +174,8 @@ class TranslationIterableDataset(IterableDataset):
         self.trg_file_path = trg_file_path
         self.src_tokenizer = src_tokenizer
         self.trg_tokenizer = trg_tokenizer
+        self.src_file = open(self.src_file_path, "r", encoding="utf-8")
+        self.trg_file = open(self.trg_file_path, "r", encoding="utf-8")
 
     def __iter__(self) -> Iterator[Tuple[List[int], List[int]]]:
         """Iterate over the dataset.
@@ -181,25 +183,17 @@ class TranslationIterableDataset(IterableDataset):
         Yields:
             The source and target sentences.
         """
-        src_file = None
-        trg_file = None
-        try:
-            src_file = open(self.src_file_path, "r", encoding="utf-8")
-            trg_file = open(self.trg_file_path, "r", encoding="utf-8")
-            src_line = src_file.readline()
-            trg_line = trg_file.readline()
 
-            while src_line and trg_line:
+        try:
+            for src_line, trg_line in zip(self.src_file, self.trg_file):
                 yield self.process_lines(src_line, trg_line)
-                src_line = src_file.readline()
-                trg_line = trg_file.readline()
 
         except FileNotFoundError:
             print(
                 f"File not found at the specified path(s). Check the listed paths {self.src_file_path} "
                 f"and {self.trg_file_path}"
             )
-            yield None
+            raise FileNotFoundError
         except StopIteration:
             print(f"Reached end of files.")
             src_file.close()
@@ -211,6 +205,11 @@ class TranslationIterableDataset(IterableDataset):
 
     def __next__(self):
         return self.__iter__()
+
+    def __del__(self):
+        # Close the files when the object is destroyed
+        self.src_file.close()
+        self.trg_file.close()
 
     def process_lines(
         self, src_line: str, trg_line: str
@@ -237,8 +236,8 @@ class TranslationIterableDataset(IterableDataset):
 
 
 if __name__ == "__main__":
-    src_file_path = "../data/euro_parl_fr_en/english_test.txt"
-    trg_file_path = "../data/euro_parl_fr_en/french_test.txt"
+    src_file_path = "../data/europarl_fr_en/english_train.txt"
+    trg_file_path = "../data/europarl_fr_en/french_train.txt"
 
     # load data from text files
     with open(src_file_path, "r", encoding="utf-8") as src_file, open(
@@ -252,12 +251,12 @@ if __name__ == "__main__":
     trg_lines = "".join(trg_lines)
 
     # create tokenizers
-    src_tokenizer = BPETokeniser(src_lines, only_lower_case=False)
-    trg_tokenizer = BPETokeniser(trg_lines, only_lower_case=False)
+    src_tokenizer = BPETokeniser(src_lines, only_lower_case=True)
+    trg_tokenizer = BPETokeniser(trg_lines, only_lower_case=True)
 
     # train tokenizers
-    src_tokenizer.train(10)
-    trg_tokenizer.train(10)
+    src_tokenizer.train(0)
+    trg_tokenizer.train(0)
 
     # create the datahandler
     data_handler = DataHandler(
