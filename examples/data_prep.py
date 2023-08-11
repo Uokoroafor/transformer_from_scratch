@@ -9,7 +9,7 @@ def train_tokenisers(num_epochs: Optional[int] = 0) -> None:
     Args:
         num_epochs: The number of epochs to train the tokenisers for. If 0, the tokenisers are only character level.
     """
-    folder_path = "../data/euro_parl_fr_en/"
+    folder_path = "../data/europarl_fr_en/"
     # We tokenise over the training data only
 
     paths = [folder_path + "english_train.txt", folder_path + "french_train.txt"]
@@ -28,4 +28,4 @@ def train_tokenisers(num_epochs: Optional[int] = 0) -> None:
 
 
 if __name__ == "__main__":
-    train_tokenisers(50)
+    train_tokenisers(100)

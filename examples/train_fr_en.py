@@ -1,5 +1,5 @@
 # This file contains a training loop for the Transformer model on the EuroParl dataset -
-# see data/euro_parl_fr_en/Europarl_Parallel_Corpus.html for more information.
+# see data/europarl_fr_en/Europarl_Parallel_Corpus.html for more information.
 
 import torch
 import torch.nn as nn
@@ -9,6 +9,7 @@ from utils.tokeniser import (
     BPETokeniser as Tokeniser,
 )  # This is the object to be un-pickled
 from utils.train_utils import Trainer
+from utils.metrics.bleu import BLEU
 from models.transformer import Transformer
 import os
 import pickle as pkl
@@ -21,7 +22,7 @@ training_params = {
     "num_epochs": 10,
     "batch_size": 32,
     "lr": 0.0001,
-    "path": "../data/euro_parl_fr_en",
+    "path": "../data/europarl_fr_en",
 }
 
 # Define the data hyperparameters
@@ -34,19 +35,19 @@ data_params = {
 
 # Define the file paths
 src_file_paths = {
-    "train": "../data/euro_parl_fr_en/english_train.txt",
-    "val": "../data/euro_parl_fr_en/english_val.txt",
-    "test": "../data/euro_parl_fr_en/english_test.txt",
+    "train": "../data/europarl_fr_en/english_train.txt",
+    "val": "../data/europarl_fr_en/english_val.txt",
+    "test": "../data/europarl_fr_en/english_test.txt",
 }
 
 trg_file_paths = {
-    "train": "../data/euro_parl_fr_en/french_train.txt",
-    "val": "../data/euro_parl_fr_en/french_val.txt",
-    "test": "../data/euro_parl_fr_en/french_test.txt",
+    "train": "../data/europarl_fr_en/french_train.txt",
+    "val": "../data/europarl_fr_en/french_val.txt",
+    "test": "../data/europarl_fr_en/french_test.txt",
 }
 
-src_tokeniser_pth = "../data/euro_parl_fr_en/english_tokeniser_50_epochs.pkl"
-trg_tokeniser_pth = "../data/euro_parl_fr_en/french_tokeniser_50_epochs.pkl"
+src_tokeniser_pth = "../data/europarl_fr_en/english_tokeniser_50_epochs.pkl"
+trg_tokeniser_pth = "../data/europarl_fr_en/french_tokeniser_50_epochs.pkl"
 
 # Load the tokenisers if they exist else create them
 if not (os.path.exists(src_tokeniser_pth) and os.path.exists(trg_tokeniser_pth)):
@@ -209,7 +210,7 @@ model, _, _ = trainer.train(
     plotting=True,
     verbose=True,
     eval_every=1,
-    early_stopping=False,
+    early_stopping=True,
     early_stopping_patience=10,
 )
 
