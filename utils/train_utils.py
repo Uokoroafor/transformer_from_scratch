@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 
 from utils.file_utils import create_training_folder
 from utils.logging_utils import Logger, plot_losses
+from utils.metrics.bleu import bleu_score
 
 
 class Trainer:
@@ -191,3 +192,36 @@ class Trainer:
             The average loss
         """
         return self.model_loop(method="test", test_data=data)
+
+
+def compute_bleu_score(
+    model: nn.Module, data: DataLoader, device: torch.device,
+) -> float:
+    """Compute the BLEU score of the model on the data
+
+    Args:
+        model: The model to evaluate
+        data: The data to evaluate the model on
+        device: The device to use
+
+    Returns:
+        The BLEU score
+    """
+    model.eval()
+
+    targets = []
+    predictions = []
+
+    with torch.no_grad():
+        for src_input, trg_input in data:
+            src_input = src_input.to(device)
+            trg_input = trg_input.to(device)
+
+            output = model(src_input, trg_input[:, :-1])
+
+            output = output.argmax(dim=-1)
+
+            targets += trg_input[:, 1:].tolist()
+            predictions += output.tolist()
+
+    return bleu_score(predictions, targets)

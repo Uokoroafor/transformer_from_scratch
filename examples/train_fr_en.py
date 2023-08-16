@@ -9,7 +9,6 @@ from utils.tokeniser import (
     BPETokeniser as Tokeniser,
 )  # This is the object to be un-pickled
 from utils.train_utils import Trainer
-from utils.metrics.bleu import BLEU
 from models.transformer import Transformer
 import os
 import pickle as pkl
@@ -128,69 +127,6 @@ loss_fn = nn.CrossEntropyLoss(ignore_index=src_pad)
 
 # Define the optimiser
 optimiser = optim.Adam(model.parameters(), lr=training_params["lr"])
-
-## Define the training loop
-# def model_loop(model: nn.Module, data_loader: torch.utils.data.DataLoader, loss_fn: nn.Module, device: torch.device,
-#                optimiser: Optional[torch.optim.Optimizer] = None, epoch: Optional[int] = None,
-#                log_interval: Optional[int] = None, method: str = 'train') -> float:
-#     """ Train the model for one epoch
-#
-#     Args:
-#         model: The model to train
-#         data_loader: The data loader to use
-#         loss_fn: The loss function to use
-#         device: The device to use
-#         optimiser: The optimiser to use
-#         epoch: The epoch number. Only useful for logging
-#         log_interval: The interval at which to log the loss
-#         method: The method to use, either 'train' or 'val'
-#
-#     Returns:
-#         The average loss for the epoch or evaluation
-#     """
-#
-#     if method == 'train':
-#         model.train()
-#     elif method == 'val':
-#         model.eval()
-#     else:
-#         raise ValueError(f'Invalid method: {method}. Only "train" and "val" are valid methods.')
-#     epoch_loss = 0
-#     batch_idx = 0
-#
-#     for batch_idx, (src_input, trg_input) in enumerate(data_loader):
-#         src_input = src_input.to(device)
-#         trg_input = trg_input.to(device)
-#
-#         # Forward pass
-#         output = model(src_input, trg_input[:, :-1])
-#
-#         # Calculate the loss
-#         loss = loss_fn(output.reshape(-1, output.shape[-1]), trg_input[:, 1:].reshape(-1))
-#
-#         if method == 'train':
-#             # Backward pass
-#             optimiser.zero_grad()
-#             loss.backward()
-#             optimiser.step()
-#
-#         epoch_loss += loss.item()
-#
-#         # Print the loss every log_interval batches
-#         if log_interval is not None:
-#             if batch_idx % log_interval == 0:
-#                 epoch_str = f'Epoch: {epoch}, ' if epoch is not None else ''
-#                 print(f'{epoch_str}Batch: {batch_idx}, Loss: {loss.item(): 4f}')
-#
-#     return epoch_loss / (batch_idx + 1)
-#
-#
-# train_loss = model_loop(model, train_loader, loss_fn, device, optimiser, epoch=1)
-# val_loss = model_loop(model, val_loader, loss_fn, device, method='val')
-#
-# print(f'Train loss: {train_loss: 4f}')
-# print(f'Val loss: {val_loss: 4f}')
-# # Define the validation loop
 
 # Create the trainer
 trainer = Trainer(
