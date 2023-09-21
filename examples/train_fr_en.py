@@ -128,6 +128,16 @@ loss_fn = nn.CrossEntropyLoss(ignore_index=src_pad)
 # Define the optimiser
 optimiser = optim.Adam(model.parameters(), lr=training_params["lr"])
 
+# Define the scheduler with warmup which will update the learning rate
+# linearly from 0 to lr over the first 10% of the training steps
+scheduler = optim.lr_scheduler.OneCycleLR(
+    optimiser,
+    max_lr=training_params["lr"],
+    steps_per_epoch=len(train_loader),
+    epochs=training_params["num_epochs"],
+    pct_start=0.1,
+)
+
 # Create the trainer
 trainer = Trainer(
     model=model,
@@ -150,8 +160,12 @@ model, _, _ = trainer.train(
     early_stopping_patience=10,
 )
 
+# Get the logger
+logger = trainer.logger
+
 # Test a phrase
 phrase = "The way around an obstacle is through it."
+logger.log_info(f"Phrase to translate: {phrase}")
 phrase_tokens = train_data.prep_string(phrase)
 phrase_tokens = torch.tensor(phrase_tokens).unsqueeze(0).to(device)
 
@@ -164,3 +178,8 @@ preds = torch.argmax(preds, dim=-1).squeeze(0)
 # Convert the tokens to a string
 pred_str = train_data.output_string(preds)
 print(pred_str)
+
+logger.log_info(f"Predicted translation: {pred_str}")
+# Close the logger
+logger.close()
+

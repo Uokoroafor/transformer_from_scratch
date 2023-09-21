@@ -3,7 +3,7 @@
 This is a PyTorch implementation of the Transformer model in the paper [Attention Is All You Need](https://arxiv.org/abs/1706.03762).
 I did this to help me better understand work I had already done on the Tutorial by Andrej Karpathy for nanoGPT and has certainly been helped by other open source repositories.
 
-It enacts the components of the transformer architecture in the pre-Norm style, which is the style used in the original paper.
+It enacts the components of the transformer architecture in the post-Norm style, which is the style used in the original paper.
 
 The key components are:
 - *Positional Encoding*: This is a sine or cosine function that is added to the input embeddings to give the model a sense of position in the sequence.
