@@ -15,7 +15,9 @@ class MultiHeadAttention(nn.Module):
         super(MultiHeadAttention, self).__init__()
 
         # Check if the d_model is divisible by the number of heads
-        assert d_model % num_heads == 0, 'd_model must be divisible by the number of heads'
+        assert (
+            d_model % num_heads == 0
+        ), "d_model must be divisible by the number of heads"
 
         # Set the d_model and num_heads
         self.d_model = d_model
@@ -33,7 +35,13 @@ class MultiHeadAttention(nn.Module):
         # Create the attention layer
         self.attention = Attention()
 
-    def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, mask: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self,
+        query: torch.Tensor,
+        key: torch.Tensor,
+        value: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Forward pass of the MultiHeadAttention layer
 
         Args:
@@ -69,7 +77,9 @@ class MultiHeadAttention(nn.Module):
         attention_output, attention_weights = self.attention(query, key, value, mask)
 
         # Reshape the attention output
-        attention_output = attention_output.transpose(1, 2).reshape(batch_size, -1, self.d_model)
+        attention_output = attention_output.transpose(1, 2).reshape(
+            batch_size, -1, self.d_model
+        )
         # Have seen people use contiguous().view() instead of reshape() here. Will use reshape() for now
 
         # Pass the attention output through the linear layer

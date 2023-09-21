@@ -7,11 +7,11 @@ import torch
 
 class Logger:
     def __init__(
-            self,
-            log_file_path: str,
-            name: Optional[str] = None,
-            log_level: int = logging.INFO,
-            verbose: Optional[bool] = False,
+        self,
+        log_file_path: str,
+        name: Optional[str] = None,
+        log_level: int = logging.INFO,
+        verbose: Optional[bool] = False,
     ):
         """Initialize the logger object
 
@@ -79,11 +79,11 @@ class Logger:
 
 
 def plot_losses(
-        train_losses: List[float],
-        val_losses: List[float],
-        model_name: Optional[str] = None,
-        num_epochs: Optional[int] = None,
-        saved_path: Optional[str] = None,
+    train_losses: List[float],
+    val_losses: List[float],
+    model_name: Optional[str] = None,
+    num_epochs: Optional[int] = None,
+    saved_path: Optional[str] = None,
 ) -> None:
     """Plot the training and validation losses
     Args:

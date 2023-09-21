@@ -10,15 +10,15 @@ class BPETokeniser:
     """Byte Pair Encoding Class for tokenising text data and creating a vocabulary."""
 
     def __init__(
-            self,
-            data: str,
-            vocab_size: int = 1_000,
-            sos: str = "<sos>",
-            eos: str = "<eos>",
-            pad: str = "<pad>",
-            unk: str = "<unk>",
-            only_lower_case: bool = True,
-            training_cap: Optional[int] = 1_000_000,
+        self,
+        data: str,
+        vocab_size: int = 1_000,
+        sos: str = "<sos>",
+        eos: str = "<eos>",
+        pad: str = "<pad>",
+        unk: str = "<unk>",
+        only_lower_case: bool = True,
+        training_cap: Optional[int] = 1_000_000,
     ):
         """Byte Pair Encoding Class
         Args:
@@ -62,8 +62,10 @@ class BPETokeniser:
         if self.vocab_size < len(set(data)):
             # raise a warning
             warnings.warn(
-                'vocab_size is less than the number of unique characters in the data setting vocab_size to '
-                'the number of unique characters in the data', UserWarning)
+                "vocab_size is less than the number of unique characters in the data setting vocab_size to "
+                "the number of unique characters in the data",
+                UserWarning,
+            )
             self.vocab_size = len(set(data)) + 4  # add 4 for the special tokens
 
     @staticmethod
@@ -122,8 +124,8 @@ class BPETokeniser:
             i = 0
             while i < len(word) - 1:
                 if (
-                        word[i] == most_frequent_pair[0]
-                        and word[i + 1] == most_frequent_pair[1]
+                    word[i] == most_frequent_pair[0]
+                    and word[i + 1] == most_frequent_pair[1]
                 ):
                     word[i] = "".join(most_frequent_pair)
                     del word[i + 1]
@@ -131,7 +133,7 @@ class BPETokeniser:
                     i += 1
 
     def train(
-            self, num_iters: Optional[int] = 50, verbose: Optional[bool] = False
+        self, num_iters: Optional[int] = 50, verbose: Optional[bool] = False
     ) -> None:
         """Train the BPE model
         Args:
@@ -204,9 +206,7 @@ class BPETokeniser:
                     token = "".join(word[i:j])
                     if token in self.vocab:
                         enc_data.append(
-                            self.lookup_table.get(
-                                token, self.lookup_table[self.unk]
-                            )
+                            self.lookup_table.get(token, self.lookup_table[self.unk])
                         )
                         i = j
                         found_token = True
@@ -219,7 +219,7 @@ class BPETokeniser:
         return enc_data
 
     def decode(
-            self, enc_data: List[int], ignore_special_tokens: Optional[bool] = False
+        self, enc_data: List[int], ignore_special_tokens: Optional[bool] = False
     ) -> List[str]:
         """Decode the encoded data
         Args:
@@ -246,7 +246,7 @@ class BPETokeniser:
         return dec_data
 
     def decode_words(
-            self, enc_data: List[int], ignore_special_tokens: Optional[bool] = True
+        self, enc_data: List[int], ignore_special_tokens: Optional[bool] = True
     ) -> str:
         """Decode the encoded data
         Args:
@@ -291,8 +291,10 @@ if __name__ == "__main__":
     print("Reverse Look Up Table: ", bpe.reverse_lookup_table)
 
     # Encode the data
-    encoded_data = bpe.encode("colour coordination is the best. some might use 'color' instead but i am "
-                              "not one of them.")  # if in the data so it should be encoded as unk
+    encoded_data = bpe.encode(
+        "colour coordination is the best. some might use 'color' instead but i am "
+        "not one of them."
+    )  # if in the data so it should be encoded as unk
 
     # Decode the data
     decoded_data = bpe.decode(encoded_data)

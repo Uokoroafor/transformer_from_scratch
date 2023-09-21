@@ -3,7 +3,7 @@
 This is a PyTorch implementation of the Transformer model in the paper [Attention Is All You Need](https://arxiv.org/abs/1706.03762).
 I did this to help me better understand work I had already done on the Tutorial by Andrej Karpathy for nanoGPT and has certainly been helped by other open source repositories.
 
-It enacts the components of the transformer architecture in the pre-Norm style, which is the style used in the original paper.
+It enacts the components of the transformer architecture in the post-Norm style, which is the style used in the original paper.
 
 The key components are:
 - *Positional Encoding*: This is a sine or cosine function that is added to the input embeddings to give the model a sense of position in the sequence.
@@ -26,6 +26,38 @@ git clone https://github.com/Uokoroafor/transformer_from_scratch
 cd transformer_from_scratch
 pip install -r requirements.txt
 ```
+
+## Project Structure
+```bash
+├── README.md
+├── data
+│   ├── __init__.py
+│   └── europarl_fr_en
+├── examples
+│   ├── __init__.py
+│   └── train_fr_en.py
+├── models
+│   ├── __init__.py
+│   ├── decoder.py
+│   ├── encoder.py
+│   ├── multi_head_attention.py
+│   ├── positional_encoding.py
+│   ├── residual_block.py
+│   └── transformer.py
+├── embeddings
+│   ├── __init__.py
+│   ├── multi_head_attention.py
+│   ├── positional_encoding.py
+├── requirements.txt
+└── utils
+    ├── __init__.py
+    ├── file_utils.py
+    ├── train_utils.py
+    ├── data_utils.py
+    ├── logging_utils.py
+    └── tokeniser.py
+```
+
 ## Usage
 I have now included a number of utility files in the utils folder to help with handling the data and training the model. 
 The main file to train on the europarl dataset is train_fr_en.py in the examples folder.

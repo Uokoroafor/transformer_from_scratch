@@ -11,8 +11,13 @@ class Attention(nn.Module):
         """
         super(Attention, self).__init__()
 
-    def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor,
-                mask: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self,
+        query: torch.Tensor,
+        key: torch.Tensor,
+        value: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Forward pass of the attention layer. Computes the attention weights and the attention output
 
         Args:
@@ -34,7 +39,6 @@ class Attention(nn.Module):
 
         # Apply the mask if it exists
         if mask is not None:
-
             if len(mask.shape) != len(scores.shape):
                 mask = mask.unsqueeze(1)
 
