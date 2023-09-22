@@ -195,7 +195,9 @@ class Trainer:
 
 
 def compute_bleu_score(
-    model: nn.Module, data: DataLoader, device: torch.device,
+    model: nn.Module,
+    data: DataLoader,
+    device: torch.device,
 ) -> float:
     """Compute the BLEU score of the model on the data
 

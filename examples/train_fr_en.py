@@ -182,4 +182,3 @@ print(pred_str)
 logger.log_info(f"Predicted translation: {pred_str}")
 # Close the logger
 logger.close()
-

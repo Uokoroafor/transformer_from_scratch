@@ -16,7 +16,7 @@ class Decoder(nn.Module):
         d_ff: int,
         dropout_prob: float,
     ):
-        """Constructor class for the decoder of the transformer 
+        """Constructor class for the decoder of the transformer
 
         Args:
             vocab_size_dec (int): Size of the vocabulary of the decoder
