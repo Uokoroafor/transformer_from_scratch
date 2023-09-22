@@ -1,3 +1,5 @@
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 # transformer_from_scratch
 
 This is a PyTorch implementation of the Transformer model in the paper [Attention Is All You Need](https://arxiv.org/abs/1706.03762).
