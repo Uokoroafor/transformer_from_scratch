@@ -4,10 +4,10 @@ from spacy.tokenizer import Tokenizer
 
 
 def bleu_score(
-        predictions: Union[List[str], str],
-        targets: Union[List[str], str],
-        n_gram: Optional[int] = 1,
-        tokenizer: Optional[Tokenizer] = None,
+    predictions: Union[List[str], str],
+    targets: Union[List[str], str],
+    n_gram: Optional[int] = 1,
+    tokenizer: Optional[Tokenizer] = None,
 ) -> float:
     """Calculate the BLEU score between two lists of strings.
     Args:
@@ -22,9 +22,17 @@ def bleu_score(
 
     # Tokenize strings if they are not lists
     if isinstance(predictions, str):
-        predictions = predictions.split() if tokenizer is None else [str(token) for token in tokenizer(predictions)]
+        predictions = (
+            predictions.split()
+            if tokenizer is None
+            else [str(token) for token in tokenizer(predictions)]
+        )
     if isinstance(targets, str):
-        targets = [targets.split()] if tokenizer is None else [[str(token) for token in tokenizer(targets)]]
+        targets = (
+            [targets.split()]
+            if tokenizer is None
+            else [[str(token) for token in tokenizer(targets)]]
+        )
 
     # Modify this line to compute weights correctly
     weights = [1.0 if i == n_gram - 1 else 0.0 for i in range(n_gram)]
