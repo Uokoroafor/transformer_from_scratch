@@ -43,7 +43,14 @@ def test_transformer_masks_respect_padding_and_causality():
 
     expected_src_mask = torch.tensor([[[True, True, False, False]]])
     expected_trg_mask = torch.tensor(
-        [[[True, False, False, False], [True, True, False, False], [True, True, True, False], [True, True, True, False]]]
+        [
+            [
+                [True, False, False, False],
+                [True, True, False, False],
+                [True, True, True, False],
+                [True, True, True, False],
+            ]
+        ]
     )
 
     assert torch.equal(src_mask, expected_src_mask)

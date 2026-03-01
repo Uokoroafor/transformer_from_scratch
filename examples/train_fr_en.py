@@ -5,7 +5,14 @@ import pickle as pkl
 from dataclasses import dataclass
 from pathlib import Path
 
+from typing import TYPE_CHECKING
+
 from examples.data_prep import train_tokenisers
+
+if TYPE_CHECKING:
+    from models.transformer import Transformer
+    from utils.data_utils import DataHandler
+    from utils.train_utils import Trainer
 
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "europarl_fr_en"
@@ -127,7 +134,9 @@ def build_data_handler(
     )
 
 
-def build_model(config: TrainConfig, src_tokeniser, trg_tokeniser, device) -> "Transformer":
+def build_model(
+    config: TrainConfig, src_tokeniser, trg_tokeniser, device
+) -> "Transformer":
     from models.transformer import Transformer
 
     return Transformer(

@@ -3,8 +3,7 @@ import pytest
 from utils.tokeniser import BPETokeniser
 
 _SAMPLE_TEXT = (
-    "the quick brown fox jumps over the lazy dog "
-    "and the dog barked loudly at the fox"
+    "the quick brown fox jumps over the lazy dog and the dog barked loudly at the fox"
 )
 
 
