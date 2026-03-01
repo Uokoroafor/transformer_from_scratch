@@ -1,184 +1,217 @@
-# This file contains a training loop for the Transformer model on the EuroParl dataset -
-# see data/europarl_fr_en/Europarl_Parallel_Corpus.html for more information.
+from __future__ import annotations
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from utils.data_utils import DataHandler
-from utils.tokeniser import (
-    BPETokeniser as Tokeniser,
-)  # This is the object to be un-pickled
-from utils.train_utils import Trainer
-from models.transformer import Transformer
-import os
+import argparse
 import pickle as pkl
+from dataclasses import dataclass
+from pathlib import Path
 
-# Set the device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from examples.data_prep import train_tokenisers
 
-# Define the training hyperparameters
-training_params = {
-    "num_epochs": 10,
-    "batch_size": 32,
-    "lr": 0.0001,
-    "path": "../data/europarl_fr_en",
-}
 
-# Define the data hyperparameters
-data_params = {
-    "max_seq_len": 100,
-    "max_vocab_size": 10000,
-    "batch_size": training_params["batch_size"],
-    "device": device,
-}
+DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "europarl_fr_en"
 
-# Define the file paths
-src_file_paths = {
-    "train": "../data/europarl_fr_en/english_train.txt",
-    "val": "../data/europarl_fr_en/english_val.txt",
-    "test": "../data/europarl_fr_en/english_test.txt",
-}
 
-trg_file_paths = {
-    "train": "../data/europarl_fr_en/french_train.txt",
-    "val": "../data/europarl_fr_en/french_val.txt",
-    "test": "../data/europarl_fr_en/french_test.txt",
-}
+@dataclass
+class TrainConfig:
+    data_dir: Path = DEFAULT_DATA_DIR
+    output_dir: Path = DEFAULT_DATA_DIR
+    num_epochs: int = 10
+    batch_size: int = 32
+    learning_rate: float = 1e-4
+    max_seq_len: int = 100
+    d_model: int = 512
+    d_ff: int = 2048
+    num_layers: int = 6
+    num_heads: int = 8
+    dropout_prob: float = 0.1
+    tokeniser_epochs: int = 50
+    eval_every: int = 1
+    early_stopping_patience: int = 10
+    plot_losses: bool = True
+    verbose: bool = True
 
-src_tokeniser_pth = "../data/europarl_fr_en/english_tokeniser_50_epochs.pkl"
-trg_tokeniser_pth = "../data/europarl_fr_en/french_tokeniser_50_epochs.pkl"
 
-# Load the tokenisers if they exist else create them
-if not (os.path.exists(src_tokeniser_pth) and os.path.exists(trg_tokeniser_pth)):
-    # Run the data_prep.py script to create the tokenisers
-    os.system("python data_prep.py")
+def parse_args() -> TrainConfig:
+    parser = argparse.ArgumentParser(
+        description="Train the EN-FR transformer example on the Europarl dataset."
+    )
+    parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_DATA_DIR)
+    parser.add_argument("--num-epochs", type=int, default=10)
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--learning-rate", type=float, default=1e-4)
+    parser.add_argument("--max-seq-len", type=int, default=100)
+    parser.add_argument("--d-model", type=int, default=512)
+    parser.add_argument("--d-ff", type=int, default=2048)
+    parser.add_argument("--num-layers", type=int, default=6)
+    parser.add_argument("--num-heads", type=int, default=8)
+    parser.add_argument("--dropout-prob", type=float, default=0.1)
+    parser.add_argument("--tokeniser-epochs", type=int, default=50)
+    parser.add_argument("--eval-every", type=int, default=1)
+    parser.add_argument("--early-stopping-patience", type=int, default=10)
+    parser.add_argument(
+        "--no-plot-losses",
+        action="store_true",
+        help="Disable loss plotting during training.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Reduce training log output.",
+    )
 
-with open(src_tokeniser_pth, "rb") as src_tokeniser_file:
-    src_tokeniser = pkl.load(src_tokeniser_file)
-with open(trg_tokeniser_pth, "rb") as trg_tokeniser_file:
-    trg_tokeniser = pkl.load(trg_tokeniser_file)
+    args = parser.parse_args()
+    return TrainConfig(
+        data_dir=args.data_dir,
+        output_dir=args.output_dir,
+        num_epochs=args.num_epochs,
+        batch_size=args.batch_size,
+        learning_rate=args.learning_rate,
+        max_seq_len=args.max_seq_len,
+        d_model=args.d_model,
+        d_ff=args.d_ff,
+        num_layers=args.num_layers,
+        num_heads=args.num_heads,
+        dropout_prob=args.dropout_prob,
+        tokeniser_epochs=args.tokeniser_epochs,
+        eval_every=args.eval_every,
+        early_stopping_patience=args.early_stopping_patience,
+        plot_losses=not args.no_plot_losses,
+        verbose=not args.quiet,
+    )
 
-# Define the data handler
-train_data = DataHandler(
-    src_file_path=src_file_paths["train"],
-    trg_file_path=trg_file_paths["train"],
-    src_tokeniser=src_tokeniser,
-    trg_tokeniser=trg_tokeniser,
-    src_max_seq_len=data_params["max_seq_len"],
-    trg_max_seq_len=data_params["max_seq_len"],
-    batch_size=data_params["batch_size"],
-)
 
-val_data = DataHandler(
-    src_file_path=src_file_paths["val"],
-    trg_file_path=trg_file_paths["val"],
-    src_tokeniser=src_tokeniser,
-    trg_tokeniser=trg_tokeniser,
-    src_max_seq_len=data_params["max_seq_len"],
-    trg_max_seq_len=data_params["max_seq_len"],
-    batch_size=data_params["batch_size"],
-)
+def load_tokeniser(path: Path):
+    with path.open("rb") as tokeniser_file:
+        return pkl.load(tokeniser_file)
 
-test_data = DataHandler(
-    src_file_path=src_file_paths["test"],
-    trg_file_path=trg_file_paths["test"],
-    src_tokeniser=src_tokeniser,
-    trg_tokeniser=trg_tokeniser,
-    src_max_seq_len=data_params["max_seq_len"],
-    trg_max_seq_len=data_params["max_seq_len"],
-    batch_size=data_params["batch_size"],
-)
 
-# Define the model hyperparameters
-transformer_params = {
-    "src_pad": src_tokeniser.encode("<pad>")[0],
-    "trg_pad": trg_tokeniser.encode("<pad>")[0],
-    "trg_sos": trg_tokeniser.encode("<sos>")[0],
-    "vocab_size_enc": len(src_tokeniser),
-    "vocab_size_dec": len(trg_tokeniser),
-    "d_model": 512,
-    "d_ff": 2048,  # Four times the size of d_model
-    "max_seq_len": data_params["max_seq_len"],
-    "num_layers": 6,
-    "num_heads": 8,
-    "dropout_prob": 0.1,
-    "device": device,
-}
+def ensure_tokenisers(data_dir: Path, tokeniser_epochs: int):
+    src_tokeniser_path = data_dir / f"english_tokeniser_{tokeniser_epochs}_epochs.pkl"
+    trg_tokeniser_path = data_dir / f"french_tokeniser_{tokeniser_epochs}_epochs.pkl"
 
-# Make the data loader
-train_loader = train_data.get_data_loader()
-val_loader = val_data.get_data_loader()
-test_loader = test_data.get_data_loader()
+    if not (src_tokeniser_path.exists() and trg_tokeniser_path.exists()):
+        train_tokenisers(
+            num_epochs=tokeniser_epochs,
+            folder_path=data_dir,
+        )
 
-# Define the model
-model = Transformer(**transformer_params)
-model.to(device)
+    return load_tokeniser(src_tokeniser_path), load_tokeniser(trg_tokeniser_path)
 
-# test a random batch tensor through the model
-src, trg = next(iter(train_loader))
-src = src.to(device)
-trg = trg.to(device)
 
-output = model(src, trg[:, :-1])
+def build_file_paths(data_dir: Path, language: str) -> dict[str, Path]:
+    return {
+        "train": data_dir / f"{language}_train.txt",
+        "val": data_dir / f"{language}_val.txt",
+        "test": data_dir / f"{language}_test.txt",
+    }
 
-# Define the loss function
-src_pad = train_data.src_pad_idx
-loss_fn = nn.CrossEntropyLoss(ignore_index=src_pad)
 
-# Define the optimiser
-optimiser = optim.Adam(model.parameters(), lr=training_params["lr"])
+def build_data_handler(
+    src_file_path: Path,
+    trg_file_path: Path,
+    src_tokeniser,
+    trg_tokeniser,
+    config: TrainConfig,
+) -> "DataHandler":
+    from utils.data_utils import DataHandler
 
-# Define the scheduler with warmup which will update the learning rate
-# linearly from 0 to lr over the first 10% of the training steps
-scheduler = optim.lr_scheduler.OneCycleLR(
-    optimiser,
-    max_lr=training_params["lr"],
-    steps_per_epoch=len(train_loader),
-    epochs=training_params["num_epochs"],
-    pct_start=0.1,
-)
+    return DataHandler(
+        src_file_path=str(src_file_path),
+        trg_file_path=str(trg_file_path),
+        src_tokeniser=src_tokeniser,
+        trg_tokeniser=trg_tokeniser,
+        src_max_seq_len=config.max_seq_len,
+        trg_max_seq_len=config.max_seq_len,
+        batch_size=config.batch_size,
+    )
 
-# Create the trainer
-trainer = Trainer(
-    model=model,
-    train_data=train_loader,
-    val_data=val_loader,
-    loss_fn=loss_fn,
-    optimiser=optimiser,
-    device=device,
-    path=training_params["path"],
-)
 
-# Train the model
-model, _, _ = trainer.train(
-    epochs=training_params["num_epochs"],
-    save_model=True,
-    plotting=True,
-    verbose=True,
-    eval_every=1,
-    early_stopping=True,
-    early_stopping_patience=10,
-)
+def build_model(config: TrainConfig, src_tokeniser, trg_tokeniser, device) -> "Transformer":
+    from models.transformer import Transformer
 
-# Get the logger
-logger = trainer.logger
+    return Transformer(
+        src_pad=src_tokeniser.encode(src_tokeniser.pad)[0],
+        trg_pad=trg_tokeniser.encode(trg_tokeniser.pad)[0],
+        trg_sos=trg_tokeniser.encode(trg_tokeniser.sos)[0],
+        vocab_size_enc=len(src_tokeniser),
+        vocab_size_dec=len(trg_tokeniser),
+        d_model=config.d_model,
+        d_ff=config.d_ff,
+        max_seq_len=config.max_seq_len,
+        num_layers=config.num_layers,
+        num_heads=config.num_heads,
+        dropout_prob=config.dropout_prob,
+        device=device,
+    )
 
-# Test a phrase
-phrase = "The way around an obstacle is through it."
-logger.log_info(f"Phrase to translate: {phrase}")
-phrase_tokens = train_data.prep_string(phrase)
-phrase_tokens = torch.tensor(phrase_tokens).unsqueeze(0).to(device)
 
-# Get the model predictions
-preds = model(phrase_tokens)
+def run_training(config: TrainConfig) -> tuple["Trainer", float]:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
 
-# Convert the predictions to tokens
-preds = torch.argmax(preds, dim=-1).squeeze(0)
+    from utils.train_utils import Trainer
 
-# Convert the tokens to a string
-pred_str = train_data.output_string(preds)
-print(pred_str)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-logger.log_info(f"Predicted translation: {pred_str}")
-# Close the logger
-logger.close()
+    src_paths = build_file_paths(config.data_dir, "english")
+    trg_paths = build_file_paths(config.data_dir, "french")
+    src_tokeniser, trg_tokeniser = ensure_tokenisers(
+        config.data_dir,
+        config.tokeniser_epochs,
+    )
+
+    train_data = build_data_handler(
+        src_paths["train"], trg_paths["train"], src_tokeniser, trg_tokeniser, config
+    )
+    val_data = build_data_handler(
+        src_paths["val"], trg_paths["val"], src_tokeniser, trg_tokeniser, config
+    )
+    test_data = build_data_handler(
+        src_paths["test"], trg_paths["test"], src_tokeniser, trg_tokeniser, config
+    )
+
+    train_loader = train_data.get_data_loader()
+    val_loader = val_data.get_data_loader()
+    test_loader = test_data.get_data_loader()
+
+    model = build_model(config, src_tokeniser, trg_tokeniser, device)
+    model.to(device)
+
+    loss_fn = nn.CrossEntropyLoss(ignore_index=train_data.trg_pad_idx)
+    optimiser = optim.Adam(model.parameters(), lr=config.learning_rate)
+
+    trainer = Trainer(
+        model=model,
+        train_data=train_loader,
+        val_data=val_loader,
+        loss_fn=loss_fn,
+        optimiser=optimiser,
+        device=device,
+        path=str(config.output_dir),
+        verbose=config.verbose,
+    )
+
+    trainer.train(
+        epochs=config.num_epochs,
+        save_model=True,
+        plotting=config.plot_losses,
+        verbose=config.verbose,
+        eval_every=config.eval_every,
+        early_stopping=True,
+        early_stopping_patience=config.early_stopping_patience,
+    )
+    test_loss = trainer.evaluate(test_loader)
+    trainer.logger.log_info(f"Test loss: {test_loss:.4f}")
+
+    return trainer, test_loss
+
+
+def main() -> None:
+    config = parse_args()
+    run_training(config)
+
+
+if __name__ == "__main__":
+    main()
