@@ -127,7 +127,9 @@ def build_data_handler(
     )
 
 
-def build_model(config: TrainConfig, src_tokeniser, trg_tokeniser, device) -> "Transformer":
+def build_model(
+    config: TrainConfig, src_tokeniser, trg_tokeniser, device
+) -> "Transformer":
     from models.transformer import Transformer
 
     return Transformer(

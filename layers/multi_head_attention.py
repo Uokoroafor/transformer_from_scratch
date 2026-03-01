@@ -15,9 +15,9 @@ class MultiHeadAttention(nn.Module):
         super(MultiHeadAttention, self).__init__()
 
         # Check if the d_model is divisible by the number of heads
-        assert (
-            d_model % num_heads == 0
-        ), "d_model must be divisible by the number of heads"
+        assert d_model % num_heads == 0, (
+            "d_model must be divisible by the number of heads"
+        )
 
         # Set the d_model and num_heads
         self.d_model = d_model

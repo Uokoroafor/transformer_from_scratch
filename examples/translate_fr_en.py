@@ -122,6 +122,7 @@ def greedy_decode(
     max_len: int,
 ) -> "torch.Tensor":
     import torch
+
     device = src.device
     trg_tokens = torch.tensor([[trg_sos]], device=device)
 

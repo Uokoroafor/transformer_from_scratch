@@ -240,9 +240,10 @@ if __name__ == "__main__":
     trg_file_path = "../data/europarl_fr_en/french_train.txt"
 
     # load data from text files
-    with open(src_file_path, "r", encoding="utf-8") as src_file, open(
-        trg_file_path, "r", encoding="utf-8"
-    ) as trg_file:
+    with (
+        open(src_file_path, "r", encoding="utf-8") as src_file,
+        open(trg_file_path, "r", encoding="utf-8") as trg_file,
+    ):
         src_lines = src_file.readlines()
         trg_lines = trg_file.readlines()
 
