@@ -36,6 +36,6 @@ class PositionalEncoding(nn.Module):
 
     def forward(self, x):
         # x is of shape (batch_size, seq_len, d_model)
-        batch_size, seq_len, _ = x.size()
+        _, seq_len, _ = x.size()
 
-        return x + self.pe[:seq_len, :]
+        return x + self.pe[:, :seq_len, :]
