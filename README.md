@@ -1,88 +1,95 @@
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
 # transformer_from_scratch
 
-This is a PyTorch implementation of the Transformer model in the paper [Attention Is All You Need](https://arxiv.org/abs/1706.03762).
-I did this to help me better understand work I had already done on the Tutorial by Andrej Karpathy for nanoGPT and has certainly been helped by other open source repositories.
+A clean, readable PyTorch implementation of the Transformer architecture from *Attention Is All You Need*, focused on sequence-to-sequence translation. The goal is clarity and correctness, with a workflow that is reproducible and easy to run.
 
-It enacts the components of the transformer architecture in the post-Norm style, which is the style used in the original paper.
+## What This Repo Is
 
-The key components are:
-- *Positional Encoding*: This is a sine or cosine function that is added to the input embeddings to give the model a sense of position in the sequence.
-<br><br>
-- *Scaled Dot Product Attention*: This is the attention mechanism used in the Transformer. It is a dot product between the query and key vectors, scaled by the square root of the dimension of the key vectors. The output is a weighted sum of the value vectors.
-<br><br>
-- *Multi-Head Attention*: This is a concatenation of multiple attention heads. Each head is a scaled dot product attention mechanism. The output of each head is concatenated and then projected to the output dimension.
-<br><br>
-- *Feed Forward Network*: This is a two layer fully connected network with a ReLU activation function in between the layers.
-<br><br>
-- *Residual Connections*: These are connections that allow the gradients to flow through the network. They are added to the output of each sub-layer and then normalised by layer normalisation.
-<br><br>
-- *Layer Normalisation*: This is a normalisation of the output of each sub-layer. It is a normalisation across the feature dimension.
-<br><br>
-- *Masking*: This is a masking of the attention weights to prevent the model from attending to future tokens in the sequence.
+- A reference implementation of encoder-decoder Transformers for EN-FR translation
+- A small training pipeline with tokeniser training and evaluation
+- A lightweight test suite that checks core tensor contracts and masking behaviour
 
-## Installation
-``` 
+It is not a framework or a production package. The emphasis is a tidy, readable reference project.
+
+## Setup
+
+```bash
 git clone https://github.com/Uokoroafor/transformer_from_scratch
 cd transformer_from_scratch
 uv sync
 ```
 
 If you do not already have `uv` installed:
-```
+
+```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-## Project Structure
-```bash
-├── README.md
-├── data
-│   ├── __init__.py
-│   └── europarl_fr_en
-├── examples
-│   ├── __init__.py
-│   └── train_fr_en.py
-├── models
-│   ├── __init__.py
-│   ├── decoder.py
-│   ├── encoder.py
-│   ├── multi_head_attention.py
-│   ├── positional_encoding.py
-│   ├── residual_block.py
-│   └── transformer.py
-├── embeddings
-│   ├── __init__.py
-│   ├── multi_head_attention.py
-│   ├── positional_encoding.py
-├── requirements.txt
-└── utils
-    ├── __init__.py
-    ├── file_utils.py
-    ├── train_utils.py
-    ├── data_utils.py
-    ├── logging_utils.py
-    └── tokeniser.py
-```
-
 ## Usage
-I have now included a number of utility files in the utils folder to help with handling the data and training the model. 
-The main file to train on the europarl dataset is train_fr_en.py in the examples folder.
 
-This file can be run with the following command:
-```
+Train on Europarl EN-FR:
+
+```bash
 uv run python examples/train_fr_en.py
 ```
-Note that it is training a model to translate from English to French but it is fairly easy to change this to any other language pair.
+
+Common training overrides:
+
+```bash
+uv run python examples/train_fr_en.py \
+  --num-epochs 5 \
+  --batch-size 16 \
+  --max-seq-len 64 \
+  --tokeniser-epochs 50
+```
+
+Translate a sentence with a trained checkpoint:
+
+```bash
+uv run python examples/translate_fr_en.py \
+  --checkpoint /path/to/your_model.pt \
+  --text "The way around an obstacle is through it."
+```
+
+Run the tests:
+
+```bash
+uv run pytest
+```
+
+## Project Structure
+
+```bash
+├── blocks
+├── embeddings
+├── examples
+│   ├── data_prep.py
+│   ├── train_fr_en.py
+│   └── translate_fr_en.py
+├── layers
+├── models
+├── tests
+├── utils
+├── pyproject.toml
+└── README.md
+```
+
+## Key Design Notes
+
+- The implementation follows the post-norm style used in the original paper.
+- Tokenisation uses a custom BPE implementation in `utils/tokeniser.py`.
+- Masking is explicit and tested for both padding and causality.
+- The training entrypoint keeps configuration in one place for reproducibility.
+
 ## Results
-TBC - the run will take a while to complete so this will be updated when there is capacity to run it.
+
+This repo currently provides a reproducible training and evaluation workflow. Benchmark results will be added once consistent runs are completed.
 
 ## References
+
 - [Attention Is All You Need](https://arxiv.org/abs/1706.03762)
 - [The Annotated Transformer](https://nlp.seas.harvard.edu/2018/04/03/attention.html)
 - [The Illustrated Transformer](http://jalammar.github.io/illustrated-transformer/)
 
+## Licence
 
-## License
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
+MIT. See `LICENSE`.
