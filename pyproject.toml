@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "transformer-from-scratch"
+version = "0.1.0"
+description = "A PyTorch transformer implementation for sequence-to-sequence translation."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Ugo Okoroafor" },
+]
+dependencies = [
+  "matplotlib>=3.10.8,<4",
+  "nltk>=3.9.3,<4",
+  "spacy>=3.8.11,<4",
+  "torch>=2.2.0,<2.3; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+  "torch>=2.10.0,<3; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.5,<9",
+  "ruff>=0.11.0,<0.12",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+  "blocks",
+  "data",
+  "embeddings",
+  "layers",
+  "models",
+  "utils",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

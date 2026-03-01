@@ -23,10 +23,15 @@ The key components are:
 - *Masking*: This is a masking of the attention weights to prevent the model from attending to future tokens in the sequence.
 
 ## Installation
-```
+``` 
 git clone https://github.com/Uokoroafor/transformer_from_scratch
 cd transformer_from_scratch
-pip install -r requirements.txt
+uv sync
+```
+
+If you do not already have `uv` installed:
+```
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ## Project Structure
@@ -66,7 +71,7 @@ The main file to train on the europarl dataset is train_fr_en.py in the examples
 
 This file can be run with the following command:
 ```
-python examples/train_fr_en.py
+uv run python examples/train_fr_en.py
 ```
 Note that it is training a model to translate from English to French but it is fairly easy to change this to any other language pair.
 ## Results
@@ -80,5 +85,4 @@ TBC - the run will take a while to complete so this will be updated when there i
 
 ## License
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 
