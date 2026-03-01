@@ -195,7 +195,7 @@ class TranslationIterableDataset(IterableDataset):
             )
             raise FileNotFoundError
         except StopIteration:
-            print(f"Reached end of files.")
+            print("Reached end of files.")
             src_file.close()
             trg_file.close()
             yield None

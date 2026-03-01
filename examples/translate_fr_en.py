@@ -4,6 +4,11 @@ import argparse
 import pickle as pkl
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import torch
+    from models.transformer import Transformer
 
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "europarl_fr_en"

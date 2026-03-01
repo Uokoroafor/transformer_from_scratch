@@ -5,7 +5,14 @@ import pickle as pkl
 from dataclasses import dataclass
 from pathlib import Path
 
+from typing import TYPE_CHECKING
+
 from examples.data_prep import train_tokenisers
+
+if TYPE_CHECKING:
+    from models.transformer import Transformer
+    from utils.data_utils import DataHandler
+    from utils.train_utils import Trainer
 
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "europarl_fr_en"
