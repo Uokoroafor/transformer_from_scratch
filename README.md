@@ -58,7 +58,7 @@ uv run pytest
 
 ## Project Structure
 
-```bash
+```text
 ├── blocks
 ├── embeddings
 ├── examples
@@ -73,16 +73,33 @@ uv run pytest
 └── README.md
 ```
 
-## Key Design Notes
+## Architecture Overview
 
-- The implementation follows the post-norm style used in the original paper.
-- Tokenisation uses a custom BPE implementation in `utils/tokeniser.py`.
-- Masking is explicit and tested for both padding and causality.
-- The training entrypoint keeps configuration in one place for reproducibility.
+```mermaid
+flowchart LR
+    src["source text"] --> tok1["tokeniser (BPE)"]
+    tok1 --> enc_ids["token ids"]
+    enc_ids --> enc["encoder"]
+    enc --> enc_states["encoder states"]
 
-## Results
+    tgt["target text\n(teacher forcing)"] --> tok2["tokeniser (BPE)"]
+    tok2 --> dec_ids["token ids"]
+    dec_ids --> dec["decoder"]
 
-This repo currently provides a reproducible training and evaluation workflow. Benchmark results will be added once consistent runs are completed.
+    enc_states --> dec
+    dec --> out["logits → next token"]
+```
+
+## Design Notes
+
+The implementation is intentionally small and explicit. I chose post-norm to stay close to the original paper and to keep the layer flow easy to trace. The custom BPE tokeniser (`utils/tokeniser.py`) keeps the data pipeline self-contained and avoids external tokenisation dependencies. Masking is handled directly in the model code so the behaviour is transparent and easy to test. The training and translation entrypoints are minimal CLIs that keep configuration in one place and make the workflow reproducible without introducing framework complexity.
+
+## Limitations
+
+- The translation script uses greedy decoding only and does not implement beam search.
+- There is no config file format yet, only CLI flags.
+- The data pipeline assumes pre-split Europarl files on disk.
+- Training results are not yet benchmarked.
 
 ## References
 
