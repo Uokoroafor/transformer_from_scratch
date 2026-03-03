@@ -56,6 +56,18 @@ Run the tests:
 uv run pytest
 ```
 
+## Common Commands
+
+If you prefer Make targets:
+
+```bash
+make setup
+make test
+make lint
+make train
+make translate
+```
+
 ## Project Structure
 
 ```text
