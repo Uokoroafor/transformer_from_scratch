@@ -26,7 +26,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ## Usage
 
-The default workflow is now a local preset designed to finish in a reasonable amount of time on a laptop.
+The default workflow uses a local preset designed to finish in 1-2 hours on a laptop.
 
 First, download and split a capped Europarl FR-EN dataset:
 
@@ -36,9 +36,9 @@ uv run python examples/download_data.py
 
 By default this uses the `local` preset:
 
-- `50,000` training sentence pairs
-- `2,000` validation sentence pairs
-- `2,000` test sentence pairs
+- 50,000 training sentence pairs
+- 2,000 validation sentence pairs
+- 2,000 test sentence pairs
 
 Then train with the matching local preset:
 
@@ -46,18 +46,18 @@ Then train with the matching local preset:
 uv run python examples/train_fr_en.py
 ```
 
-The default `local` training preset is intentionally smaller than the original baseline:
+The default `local` training preset is intentionally smaller than the full baseline:
 
-- `5` epochs
+- 5 epochs
 - `batch_size=16`
 - `max_seq_len=64`
 - `d_model=256`
 - `d_ff=1024`
-- `4` layers
-- `4` heads
+- 4 layers
+- 4 heads
 - `tokeniser_epochs=20`
 
-This is the recommended local path when you want a result in roughly `1-2` hours rather than a long-running full-corpus experiment.
+Use this when you want a result in 1-2 hours rather than running the full corpus.
 
 If you want the larger baseline settings instead, use the `benchmark` preset for both data prep and training:
 
