@@ -15,7 +15,7 @@ It is not a framework or a production package. The emphasis is a tidy, readable 
 ```bash
 git clone https://github.com/Uokoroafor/transformer_from_scratch
 cd transformer_from_scratch
-uv sync
+uv sync --dev
 ```
 
 If you do not already have `uv` installed:
@@ -26,20 +26,54 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ## Usage
 
-Train on Europarl EN-FR:
+The default workflow is now a local preset designed to finish in a reasonable amount of time on a laptop.
+
+First, download and split a capped Europarl FR-EN dataset:
+
+```bash
+uv run python examples/download_data.py
+```
+
+By default this uses the `local` preset:
+
+- `50,000` training sentence pairs
+- `2,000` validation sentence pairs
+- `2,000` test sentence pairs
+
+Then train with the matching local preset:
 
 ```bash
 uv run python examples/train_fr_en.py
 ```
 
-Common training overrides:
+The default `local` training preset is intentionally smaller than the original baseline:
+
+- `5` epochs
+- `batch_size=16`
+- `max_seq_len=64`
+- `d_model=256`
+- `d_ff=1024`
+- `4` layers
+- `4` heads
+- `tokeniser_epochs=20`
+
+This is the recommended local path when you want a result in roughly `1-2` hours rather than a long-running full-corpus experiment.
+
+If you want the larger baseline settings instead, use the `benchmark` preset for both data prep and training:
+
+```bash
+uv run python examples/download_data.py --preset benchmark
+uv run python examples/train_fr_en.py --preset benchmark
+```
+
+Common training overrides on top of the local preset:
 
 ```bash
 uv run python examples/train_fr_en.py \
-  --num-epochs 5 \
-  --batch-size 16 \
+  --num-epochs 3 \
+  --batch-size 8 \
   --max-seq-len 64 \
-  --tokeniser-epochs 50
+  --tokeniser-epochs 20
 ```
 
 Translate a sentence with a trained checkpoint:
@@ -64,6 +98,7 @@ If you prefer Make targets:
 make setup
 make test
 make lint
+make download-data
 make train
 make translate
 ```
@@ -75,6 +110,7 @@ make translate
 ├── embeddings
 ├── examples
 │   ├── data_prep.py
+│   ├── download_data.py
 │   ├── train_fr_en.py
 │   └── translate_fr_en.py
 ├── layers
@@ -110,7 +146,7 @@ The implementation is intentionally small and explicit. I chose post-norm to sta
 
 - The translation script uses greedy decoding only and does not implement beam search.
 - There is no config file format yet, only CLI flags.
-- The data pipeline assumes pre-split Europarl files on disk.
+- The data pipeline requires the Europarl corpus to be downloaded and split locally first (see `examples/download_data.py`).
 - Training results are not yet benchmarked.
 
 ## References

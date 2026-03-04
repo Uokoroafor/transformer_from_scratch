@@ -3,7 +3,19 @@
 .venv/
 __pycache__/
 *.py[cod]
+
+# Model artefacts
 *.pkl
 *.pt
 *.png
 *.log
+
+# Corpus data and downloaded archive
+data/europarl_fr_en/*.txt
+data/europarl_fr_en/*.tgz
+
+# Training output (checkpoints, logs, plots)
+data/europarl_fr_en/training/
+
+# Test coverage
+.coverage

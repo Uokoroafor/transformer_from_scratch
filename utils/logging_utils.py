@@ -3,6 +3,7 @@ import logging.handlers
 from typing import List, Optional
 import matplotlib.pyplot as plt
 import torch
+from tqdm import tqdm
 
 
 class Logger:
@@ -73,9 +74,9 @@ class Logger:
     def print_last_message(self):
         """Print the last message in the log file"""
         if self.messages:
-            print(self.messages[-1])
+            tqdm.write(self.messages[-1])
         else:
-            print("No messages logged.")
+            tqdm.write("No messages logged.")
 
 
 def plot_losses(
