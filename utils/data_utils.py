@@ -174,8 +174,25 @@ class TranslationIterableDataset(IterableDataset):
         self.trg_file_path = trg_file_path
         self.src_tokenizer = src_tokenizer
         self.trg_tokenizer = trg_tokenizer
-        self.src_file = open(self.src_file_path, "r", encoding="utf-8")
-        self.trg_file = open(self.trg_file_path, "r", encoding="utf-8")
+        self._length = self._count_examples()
+
+    def _count_examples(self) -> int:
+        """Count aligned sentence pairs once so callers can size progress bars."""
+        with open(self.src_file_path, "r", encoding="utf-8") as src_file:
+            src_count = sum(1 for _ in src_file)
+        with open(self.trg_file_path, "r", encoding="utf-8") as trg_file:
+            trg_count = sum(1 for _ in trg_file)
+
+        if src_count != trg_count:
+            raise ValueError(
+                "Source and target files have different numbers of lines: "
+                f"{src_count} vs {trg_count}"
+            )
+
+        return src_count
+
+    def __len__(self) -> int:
+        return self._length
 
     def __iter__(self) -> Iterator[Tuple[List[int], List[int]]]:
         """Iterate over the dataset.
@@ -185,8 +202,11 @@ class TranslationIterableDataset(IterableDataset):
         """
 
         try:
-            for src_line, trg_line in zip(self.src_file, self.trg_file):
-                yield self.process_lines(src_line, trg_line)
+            with open(self.src_file_path, "r", encoding="utf-8") as src_file, open(
+                self.trg_file_path, "r", encoding="utf-8"
+            ) as trg_file:
+                for src_line, trg_line in zip(src_file, trg_file):
+                    yield self.process_lines(src_line, trg_line)
 
         except FileNotFoundError:
             print(
@@ -196,8 +216,6 @@ class TranslationIterableDataset(IterableDataset):
             raise FileNotFoundError
         except StopIteration:
             print("Reached end of files.")
-            src_file.close()
-            trg_file.close()
             yield None
         except Exception as e:
             print(f"An error occurred: {e}")
@@ -205,11 +223,6 @@ class TranslationIterableDataset(IterableDataset):
 
     def __next__(self):
         return self.__iter__()
-
-    def __del__(self):
-        # Close the files when the object is destroyed
-        self.src_file.close()
-        self.trg_file.close()
 
     def process_lines(
         self, src_line: str, trg_line: str

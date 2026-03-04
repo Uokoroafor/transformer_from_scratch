@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from utils.file_utils import create_training_folder
 from utils.logging_utils import Logger, plot_losses
@@ -49,7 +50,7 @@ class Trainer:
         )
 
     def model_loop(
-        self, method: str = "train", test_data: Optional[DataLoader] = None
+        self, method: str = "train", test_data: Optional[DataLoader] = None, verbose: bool = True
     ) -> float:
         """Train the model for one epoch
 
@@ -78,7 +79,14 @@ class Trainer:
         epoch_loss = 0
         batch_idx = 0
 
-        for batch_idx, (src_input, trg_input) in enumerate(data_loader):
+        pbar = tqdm(
+            data_loader,
+            total=len(data_loader),
+            desc=method.capitalize(),
+            leave=True,
+            disable=not verbose,
+        )
+        for batch_idx, (src_input, trg_input) in enumerate(pbar):
             src_input = src_input.to(self.device)
             trg_input = trg_input.to(self.device)
 
@@ -97,6 +105,7 @@ class Trainer:
                 self.optimiser.step()
 
             epoch_loss += loss.item()
+            pbar.set_postfix(loss=f"{epoch_loss / (batch_idx + 1):.4f}")
 
         return epoch_loss / (batch_idx + 1)
 
@@ -139,10 +148,10 @@ class Trainer:
         epochs_without_improvement = 0
 
         for epoch in range(epochs):
-            train_epoch_loss = self.model_loop(method="train")
+            train_epoch_loss = self.model_loop(method="train", verbose=verbose)
 
             if epoch % eval_every == 0:
-                val_epoch_loss = self.model_loop(method="val")
+                val_epoch_loss = self.model_loop(method="val", verbose=verbose)
 
                 train_loss.append(train_epoch_loss)
                 val_loss.append(val_epoch_loss)

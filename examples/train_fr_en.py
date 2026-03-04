@@ -17,45 +17,87 @@ if TYPE_CHECKING:
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "europarl_fr_en"
 
+TRAIN_PRESETS = {
+    "local": {
+        "num_epochs": 5,
+        "batch_size": 16,
+        "learning_rate": 1e-4,
+        "max_seq_len": 64,
+        "d_model": 256,
+        "d_ff": 1024,
+        "num_layers": 4,
+        "num_heads": 4,
+        "dropout_prob": 0.1,
+        "tokeniser_epochs": 20,
+        "eval_every": 1,
+        "early_stopping_patience": 5,
+    },
+    "benchmark": {
+        "num_epochs": 10,
+        "batch_size": 128,
+        "learning_rate": 1e-4,
+        "max_seq_len": 100,
+        "d_model": 512,
+        "d_ff": 2048,
+        "num_layers": 6,
+        "num_heads": 8,
+        "dropout_prob": 0.1,
+        "tokeniser_epochs": 50,
+        "eval_every": 1,
+        "early_stopping_patience": 10,
+    },
+}
+
+
+def resolve_override(value, default):
+    return value if value is not None else default
+
 
 @dataclass
 class TrainConfig:
     data_dir: Path = DEFAULT_DATA_DIR
     output_dir: Path = DEFAULT_DATA_DIR
-    num_epochs: int = 10
-    batch_size: int = 32
+    num_epochs: int = TRAIN_PRESETS["local"]["num_epochs"]
+    batch_size: int = TRAIN_PRESETS["local"]["batch_size"]
     learning_rate: float = 1e-4
-    max_seq_len: int = 100
-    d_model: int = 512
-    d_ff: int = 2048
-    num_layers: int = 6
-    num_heads: int = 8
+    max_seq_len: int = TRAIN_PRESETS["local"]["max_seq_len"]
+    d_model: int = TRAIN_PRESETS["local"]["d_model"]
+    d_ff: int = TRAIN_PRESETS["local"]["d_ff"]
+    num_layers: int = TRAIN_PRESETS["local"]["num_layers"]
+    num_heads: int = TRAIN_PRESETS["local"]["num_heads"]
     dropout_prob: float = 0.1
-    tokeniser_epochs: int = 50
+    tokeniser_epochs: int = TRAIN_PRESETS["local"]["tokeniser_epochs"]
     eval_every: int = 1
-    early_stopping_patience: int = 10
+    early_stopping_patience: int = TRAIN_PRESETS["local"]["early_stopping_patience"]
     plot_losses: bool = True
     verbose: bool = True
+    preset: str = "local"
 
 
 def parse_args() -> TrainConfig:
     parser = argparse.ArgumentParser(
         description="Train the EN-FR transformer example on the Europarl dataset."
     )
+    parser.add_argument(
+        "--preset",
+        choices=tuple(TRAIN_PRESETS.keys()),
+        default="local",
+        help="Training preset. `local` is the fast default; `benchmark` restores the larger baseline settings.",
+    )
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_DATA_DIR)
-    parser.add_argument("--num-epochs", type=int, default=10)
-    parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--learning-rate", type=float, default=1e-4)
-    parser.add_argument("--max-seq-len", type=int, default=100)
-    parser.add_argument("--d-model", type=int, default=512)
-    parser.add_argument("--d-ff", type=int, default=2048)
-    parser.add_argument("--num-layers", type=int, default=6)
-    parser.add_argument("--num-heads", type=int, default=8)
-    parser.add_argument("--dropout-prob", type=float, default=0.1)
-    parser.add_argument("--tokeniser-epochs", type=int, default=50)
-    parser.add_argument("--eval-every", type=int, default=1)
-    parser.add_argument("--early-stopping-patience", type=int, default=10)
+    parser.add_argument("--num-epochs", type=int, default=None)
+    parser.add_argument("--batch-size", type=int, default=None)
+    parser.add_argument("--learning-rate", type=float, default=None)
+    parser.add_argument("--max-seq-len", type=int, default=None)
+    parser.add_argument("--d-model", type=int, default=None)
+    parser.add_argument("--d-ff", type=int, default=None)
+    parser.add_argument("--num-layers", type=int, default=None)
+    parser.add_argument("--num-heads", type=int, default=None)
+    parser.add_argument("--dropout-prob", type=float, default=None)
+    parser.add_argument("--tokeniser-epochs", type=int, default=None)
+    parser.add_argument("--eval-every", type=int, default=None)
+    parser.add_argument("--early-stopping-patience", type=int, default=None)
     parser.add_argument(
         "--no-plot-losses",
         action="store_true",
@@ -68,23 +110,29 @@ def parse_args() -> TrainConfig:
     )
 
     args = parser.parse_args()
+    preset = TRAIN_PRESETS[args.preset].copy()
     return TrainConfig(
         data_dir=args.data_dir,
         output_dir=args.output_dir,
-        num_epochs=args.num_epochs,
-        batch_size=args.batch_size,
-        learning_rate=args.learning_rate,
-        max_seq_len=args.max_seq_len,
-        d_model=args.d_model,
-        d_ff=args.d_ff,
-        num_layers=args.num_layers,
-        num_heads=args.num_heads,
-        dropout_prob=args.dropout_prob,
-        tokeniser_epochs=args.tokeniser_epochs,
-        eval_every=args.eval_every,
-        early_stopping_patience=args.early_stopping_patience,
+        num_epochs=resolve_override(args.num_epochs, preset["num_epochs"]),
+        batch_size=resolve_override(args.batch_size, preset["batch_size"]),
+        learning_rate=resolve_override(args.learning_rate, preset["learning_rate"]),
+        max_seq_len=resolve_override(args.max_seq_len, preset["max_seq_len"]),
+        d_model=resolve_override(args.d_model, preset["d_model"]),
+        d_ff=resolve_override(args.d_ff, preset["d_ff"]),
+        num_layers=resolve_override(args.num_layers, preset["num_layers"]),
+        num_heads=resolve_override(args.num_heads, preset["num_heads"]),
+        dropout_prob=resolve_override(args.dropout_prob, preset["dropout_prob"]),
+        tokeniser_epochs=resolve_override(
+            args.tokeniser_epochs, preset["tokeniser_epochs"]
+        ),
+        eval_every=resolve_override(args.eval_every, preset["eval_every"]),
+        early_stopping_patience=resolve_override(
+            args.early_stopping_patience, preset["early_stopping_patience"]
+        ),
         plot_losses=not args.no_plot_losses,
         verbose=not args.quiet,
+        preset=args.preset,
     )
 
 
@@ -162,7 +210,12 @@ def run_training(config: TrainConfig) -> tuple["Trainer", float]:
 
     from utils.train_utils import Trainer
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
 
     src_paths = build_file_paths(config.data_dir, "english")
     trg_paths = build_file_paths(config.data_dir, "french")
@@ -201,6 +254,7 @@ def run_training(config: TrainConfig) -> tuple["Trainer", float]:
         path=str(config.output_dir),
         verbose=config.verbose,
     )
+    trainer.logger.log_info(f"Using device: {device}")
 
     trainer.train(
         epochs=config.num_epochs,
