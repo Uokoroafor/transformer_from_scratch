@@ -13,48 +13,84 @@ if TYPE_CHECKING:
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "europarl_fr_en"
 
+TRANSLATE_PRESETS = {
+    "local": {
+        "max_len": 64,
+        "d_model": 256,
+        "d_ff": 1024,
+        "num_layers": 4,
+        "num_heads": 4,
+        "dropout_prob": 0.0,
+        "tokeniser_epochs": 20,
+    },
+    "benchmark": {
+        "max_len": 100,
+        "d_model": 512,
+        "d_ff": 2048,
+        "num_layers": 6,
+        "num_heads": 8,
+        "dropout_prob": 0.0,
+        "tokeniser_epochs": 50,
+    },
+}
+
+
+def resolve_override(value, default):
+    return value if value is not None else default
+
 
 @dataclass
 class TranslateConfig:
     data_dir: Path = DEFAULT_DATA_DIR
     checkpoint: Path | None = None
     text: str = ""
-    max_len: int = 100
-    d_model: int = 512
-    d_ff: int = 2048
-    num_layers: int = 6
-    num_heads: int = 8
+    max_len: int = TRANSLATE_PRESETS["local"]["max_len"]
+    d_model: int = TRANSLATE_PRESETS["local"]["d_model"]
+    d_ff: int = TRANSLATE_PRESETS["local"]["d_ff"]
+    num_layers: int = TRANSLATE_PRESETS["local"]["num_layers"]
+    num_heads: int = TRANSLATE_PRESETS["local"]["num_heads"]
     dropout_prob: float = 0.0
-    tokeniser_epochs: int = 50
+    tokeniser_epochs: int = TRANSLATE_PRESETS["local"]["tokeniser_epochs"]
+    preset: str = "local"
 
 
 def parse_args() -> TranslateConfig:
     parser = argparse.ArgumentParser(
         description="Translate EN to FR with a trained transformer checkpoint."
     )
+    parser.add_argument(
+        "--preset",
+        choices=tuple(TRANSLATE_PRESETS.keys()),
+        default="local",
+        help="Translation preset. `local` matches the fast local training defaults; `benchmark` matches the larger baseline.",
+    )
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--text", type=str, required=True)
-    parser.add_argument("--max-len", type=int, default=100)
-    parser.add_argument("--d-model", type=int, default=512)
-    parser.add_argument("--d-ff", type=int, default=2048)
-    parser.add_argument("--num-layers", type=int, default=6)
-    parser.add_argument("--num-heads", type=int, default=8)
-    parser.add_argument("--dropout-prob", type=float, default=0.0)
-    parser.add_argument("--tokeniser-epochs", type=int, default=50)
+    parser.add_argument("--max-len", type=int, default=None)
+    parser.add_argument("--d-model", type=int, default=None)
+    parser.add_argument("--d-ff", type=int, default=None)
+    parser.add_argument("--num-layers", type=int, default=None)
+    parser.add_argument("--num-heads", type=int, default=None)
+    parser.add_argument("--dropout-prob", type=float, default=None)
+    parser.add_argument("--tokeniser-epochs", type=int, default=None)
 
     args = parser.parse_args()
+    preset = TRANSLATE_PRESETS[args.preset].copy()
     return TranslateConfig(
         data_dir=args.data_dir,
         checkpoint=args.checkpoint,
         text=args.text,
-        max_len=args.max_len,
-        d_model=args.d_model,
-        d_ff=args.d_ff,
-        num_layers=args.num_layers,
-        num_heads=args.num_heads,
-        dropout_prob=args.dropout_prob,
-        tokeniser_epochs=args.tokeniser_epochs,
+        max_len=resolve_override(args.max_len, preset["max_len"]),
+        d_model=resolve_override(args.d_model, preset["d_model"]),
+        d_ff=resolve_override(args.d_ff, preset["d_ff"]),
+        num_layers=resolve_override(args.num_layers, preset["num_layers"]),
+        num_heads=resolve_override(args.num_heads, preset["num_heads"]),
+        dropout_prob=resolve_override(args.dropout_prob, preset["dropout_prob"]),
+        tokeniser_epochs=resolve_override(
+            args.tokeniser_epochs, preset["tokeniser_epochs"]
+        ),
+        preset=args.preset,
     )
 
 
@@ -149,7 +185,12 @@ def main() -> None:
     config = parse_args()
     import torch
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
 
     src_tokeniser, trg_tokeniser = load_tokenisers(
         config.data_dir, config.tokeniser_epochs

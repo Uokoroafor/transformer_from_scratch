@@ -97,12 +97,12 @@ def plot_losses(
     """
     if num_epochs is not None:
         steps = num_epochs
-        x = torch.arange(0, num_epochs + 1, num_epochs // (len(train_losses) - 1))
+        x = torch.arange(0, num_epochs + 1, num_epochs // (len(train_losses) - 1)).tolist()
         # Make the x-axis start at 1
         x[0] = 1
     else:
         steps = len(train_losses)
-        x = torch.arange(1, len(train_losses) + 1)
+        x = torch.arange(1, len(train_losses) + 1).tolist()
     plt.plot(x, train_losses, label="train")
     plt.plot(x, val_losses, label="val", linestyle="dashed")
     if model_name is not None:
