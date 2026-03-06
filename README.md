@@ -1,4 +1,5 @@
 # transformer_from_scratch
+[![CI](https://github.com/Uokoroafor/transformer_from_scratch/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Uokoroafor/transformer_from_scratch/actions/workflows/ci.yml)
 
 A clean, readable PyTorch implementation of the Transformer architecture from *Attention Is All You Need*, focused on sequence-to-sequence translation. The goal is clarity and correctness, with a workflow that is reproducible and easy to run.
 
@@ -45,6 +46,11 @@ Then train with the matching local preset:
 ```bash
 uv run python examples/train_fr_en.py
 ```
+
+Checkpoints and logs are written under `data/europarl_fr_en/training/<run_id>/` with:
+
+- `saved_models/Transformer_best_model.pt`
+- `training_logs/training_log.txt`
 
 The default `local` training preset is intentionally smaller than the full baseline:
 
@@ -148,6 +154,19 @@ The implementation is intentionally small and explicit. I chose post-norm to sta
 - There is no config file format yet, only CLI flags.
 - The data pipeline requires the Europarl corpus to be downloaded and split locally first (see `examples/download_data.py`).
 - Training results are not yet benchmarked.
+
+## Results Snapshot
+
+Latest local run:
+
+| Preset | Device | Epochs | Final train loss | Final val loss | Notes |
+|---|---|---:|---:|---:|---|
+| `local` | `mps` | 5 | 1.1407 | 1.0595 | Best checkpoint saved each epoch |
+
+Example translation using `data/europarl_fr_en/training/260304-0858/saved_models/Transformer_best_model.pt`:
+
+- Input: `The way around an obstacle is through it.`
+- Output: `le trouve aujourd'hui est une chose.`
 
 ## References
 
